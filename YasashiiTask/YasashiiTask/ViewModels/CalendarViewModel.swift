@@ -41,7 +41,7 @@ final class CalendarViewModel {
         calendar: Calendar = .current
     ) -> [CompletionRecord] {
         records
-            .filter { $0.status == "completed" && calendar.isDate($0.targetDate, inSameDayAs: date) }
+            .filter { $0.isCompletedStatus && calendar.isDate($0.targetDate, inSameDayAs: date) }
             .sorted { ($0.completedAt ?? .distantPast) < ($1.completedAt ?? .distantPast) }
     }
 

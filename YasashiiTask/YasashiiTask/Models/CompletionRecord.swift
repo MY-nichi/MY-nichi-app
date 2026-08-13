@@ -29,3 +29,14 @@ final class CompletionRecord {
         self.memo = memo
     }
 }
+
+extension CompletionRecord {
+    var achievement: TaskAchievement? {
+        get { TaskAchievement(storedStatus: status) }
+        set { status = newValue?.rawValue ?? "pending" }
+    }
+
+    var isCompletedStatus: Bool {
+        achievement != nil
+    }
+}

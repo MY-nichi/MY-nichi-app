@@ -27,6 +27,8 @@ final class TaskCardFormViewModel {
     var iconName: String
     var colorHex: String
     var repeatRule: String
+    var hasReminder: Bool
+    var reminderTime: Date
     var tagsText: String
     var checklistDrafts: [ChecklistDraft]
     var errorMessage: String?
@@ -52,6 +54,8 @@ final class TaskCardFormViewModel {
         self.iconName = card?.iconName ?? "rectangle.stack"
         self.colorHex = card?.colorHex ?? habit.colorHex
         self.repeatRule = card?.repeatRule ?? "none"
+        self.hasReminder = card?.reminderTime != nil
+        self.reminderTime = card?.reminderTime ?? .now
         self.tagsText = card?.tags.joined(separator: "、") ?? ""
         self.checklistDrafts = (card?.checklistItems ?? [])
             .sorted { $0.sortOrder < $1.sortOrder }
@@ -59,7 +63,7 @@ final class TaskCardFormViewModel {
     }
 
     var navigationTitle: String {
-        card == nil ? "カードを作成" : "カードを編集"
+        card == nil ? "タスクを作成" : "タスクを編集"
     }
 
     func addChecklistDraft() {
@@ -73,11 +77,11 @@ final class TaskCardFormViewModel {
     func save() -> TaskCard? {
         let cleanedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cleanedTitle.isEmpty else {
-            errorMessage = "カード名を入力してください。"
+            errorMessage = "タスク名を入力してください。"
             return nil
         }
         guard cleanedTitle.count <= 100 else {
-            errorMessage = "カード名は100文字以内で入力してください。"
+            errorMessage = "タスク名は100文字以内で入力してください。"
             return nil
         }
         guard !hasEndTime || hasStartTime else {
@@ -101,6 +105,7 @@ final class TaskCardFormViewModel {
         target.iconName = iconName
         target.colorHex = colorHex
         target.repeatRule = repeatRule == "none" ? nil : repeatRule
+        target.reminderTime = hasReminder ? reminderTime : nil
         target.tags = parsedTags
         target.updatedAt = .now
         updateChecklist(for: target)

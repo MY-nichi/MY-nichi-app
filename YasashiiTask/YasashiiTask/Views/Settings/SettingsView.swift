@@ -40,6 +40,16 @@ private struct SettingsForm: View {
 
     var body: some View {
         Form {
+            Section {
+                TextField("お名前（任意）", text: displayNameBinding)
+                    .textContentType(.name)
+                    .onSubmit(save)
+            } header: {
+                Text("プロフィール")
+            } footer: {
+                Text("入力した名前は、この端末内だけに保存します。")
+            }
+
             Section("外観") {
                 Picker("テーマ", selection: $settings.theme) {
                     Text("端末に合わせる").tag("system")
@@ -61,12 +71,11 @@ private struct SettingsForm: View {
             Section {
                 LabeledContent("バックアップのお知らせ", value: "今後追加予定")
                     .foregroundStyle(.secondary)
-                LabeledContent("タスク通知", value: "MVP完成後に追加")
-                    .foregroundStyle(.secondary)
+                LabeledContent("タスク通知", value: "カードごとに設定")
             } header: {
                 Text("通知の準備")
             } footer: {
-                Text("バックアップの保存忘れやタスク時刻を知らせる機能は、MVP完成後に追加します。")
+                Text("タスク通知は、カードの作成・編集画面で時刻を設定できます。")
             }
 
             Section("データ") {
@@ -78,11 +87,21 @@ private struct SettingsForm: View {
             }
 
             Section("アプリ情報") {
-                LabeledContent("アプリ名", value: "やさしいタスク")
+                LabeledContent("アプリ名", value: "MY-nichi")
                 LabeledContent("データ保存", value: "この端末内")
                 LabeledContent("バージョン", value: "MVP開発中")
             }
         }
+    }
+
+    private var displayNameBinding: Binding<String> {
+        Binding(
+            get: { settings.displayName ?? "" },
+            set: {
+                settings.displayName = $0.isEmpty ? nil : $0
+                save()
+            }
+        )
     }
 }
 

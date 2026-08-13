@@ -25,8 +25,9 @@ struct BackupPackage: Codable {
 
 struct HabitBackup: Codable {
     let id: UUID; let title: String; let detail: String; let category: String
-    let iconName: String; let colorHex: String; let startDate: Date; let endDate: Date?
+    let iconName: String; let customIconText: String?; let colorHex: String; let startDate: Date; let endDate: Date?
     let activeDays: [Int]; let reminderTime: Date?; let targetCount: Int; let sortOrder: Int
+    let dailyStartTime: Date?; let dailyEndTime: Date?; let targetMinutes: Int?; let targetDays: Int?
     let isActive: Bool; let isArchived: Bool; let createdAt: Date; let updatedAt: Date
 }
 
@@ -35,6 +36,7 @@ struct TaskCardBackup: Codable {
     let dueDate: Date?; let startTime: Date?; let endTime: Date?; let priority: String
     let iconName: String; let colorHex: String; let sortOrder: Int; let isCompleted: Bool
     let completedAt: Date?; let repeatRule: String?; let tags: [String]; let createdAt: Date; let updatedAt: Date
+    let reminderTime: Date?
 }
 
 struct ChecklistItemBackup: Codable {
@@ -49,6 +51,7 @@ struct CompletionRecordBackup: Codable {
 struct AppSettingsBackup: Codable {
     let id: UUID; let theme: String; let notificationsEnabled: Bool; let hapticsEnabled: Bool
     let backupReminderEnabled: Bool; let lastBackupDate: Date?; let hasCompletedOnboarding: Bool
+    let displayName: String?
 }
 
 @MainActor
@@ -64,11 +67,11 @@ enum BackupService {
         let package = BackupPackage(
             version: 1,
             exportedAt: exportedAt,
-            habits: habits.map { .init(id: $0.id, title: $0.title, detail: $0.detail, category: $0.category, iconName: $0.iconName, colorHex: $0.colorHex, startDate: $0.startDate, endDate: $0.endDate, activeDays: $0.activeDays, reminderTime: $0.reminderTime, targetCount: $0.targetCount, sortOrder: $0.sortOrder, isActive: $0.isActive, isArchived: $0.isArchived, createdAt: $0.createdAt, updatedAt: $0.updatedAt) },
-            cards: cards.map { .init(id: $0.id, habitID: $0.habit?.id, title: $0.title, detail: $0.detail, memo: $0.memo, dueDate: $0.dueDate, startTime: $0.startTime, endTime: $0.endTime, priority: $0.priority, iconName: $0.iconName, colorHex: $0.colorHex, sortOrder: $0.sortOrder, isCompleted: $0.isCompleted, completedAt: $0.completedAt, repeatRule: $0.repeatRule, tags: $0.tags, createdAt: $0.createdAt, updatedAt: $0.updatedAt) },
+            habits: habits.map { .init(id: $0.id, title: $0.title, detail: $0.detail, category: $0.category, iconName: $0.iconName, customIconText: $0.customIconText, colorHex: $0.colorHex, startDate: $0.startDate, endDate: $0.endDate, activeDays: $0.activeDays, reminderTime: $0.reminderTime, targetCount: $0.targetCount, sortOrder: $0.sortOrder, dailyStartTime: $0.dailyStartTime, dailyEndTime: $0.dailyEndTime, targetMinutes: $0.targetMinutes, targetDays: $0.targetDays, isActive: $0.isActive, isArchived: $0.isArchived, createdAt: $0.createdAt, updatedAt: $0.updatedAt) },
+            cards: cards.map { .init(id: $0.id, habitID: $0.habit?.id, title: $0.title, detail: $0.detail, memo: $0.memo, dueDate: $0.dueDate, startTime: $0.startTime, endTime: $0.endTime, priority: $0.priority, iconName: $0.iconName, colorHex: $0.colorHex, sortOrder: $0.sortOrder, isCompleted: $0.isCompleted, completedAt: $0.completedAt, repeatRule: $0.repeatRule, tags: $0.tags, createdAt: $0.createdAt, updatedAt: $0.updatedAt, reminderTime: $0.reminderTime) },
             checklistItems: checklistItems.map { .init(id: $0.id, taskCardID: $0.taskCard?.id, title: $0.title, isCompleted: $0.isCompleted, sortOrder: $0.sortOrder) },
             completionRecords: completionRecords.map { .init(id: $0.id, habitID: $0.habit?.id, taskCardID: $0.taskCard?.id, targetDate: $0.targetDate, completedAt: $0.completedAt, status: $0.status, memo: $0.memo) },
-            settings: settings.map { .init(id: $0.id, theme: $0.theme, notificationsEnabled: $0.notificationsEnabled, hapticsEnabled: $0.hapticsEnabled, backupReminderEnabled: $0.backupReminderEnabled, lastBackupDate: $0.lastBackupDate, hasCompletedOnboarding: $0.hasCompletedOnboarding) }
+            settings: settings.map { .init(id: $0.id, theme: $0.theme, notificationsEnabled: $0.notificationsEnabled, hapticsEnabled: $0.hapticsEnabled, backupReminderEnabled: $0.backupReminderEnabled, lastBackupDate: $0.lastBackupDate, hasCompletedOnboarding: $0.hasCompletedOnboarding, displayName: $0.displayName) }
         )
         return try encoder.encode(package)
     }
@@ -111,14 +114,14 @@ enum BackupService {
 
         var habitsByID: [UUID: Habit] = [:]
         for item in package.habits {
-            let habit = Habit(id: item.id, title: item.title, detail: item.detail, category: item.category, iconName: item.iconName, colorHex: item.colorHex, startDate: item.startDate, endDate: item.endDate, activeDays: item.activeDays, reminderTime: item.reminderTime, targetCount: item.targetCount, sortOrder: item.sortOrder, isActive: item.isActive, isArchived: item.isArchived, createdAt: item.createdAt, updatedAt: item.updatedAt)
+            let habit = Habit(id: item.id, title: item.title, detail: item.detail, category: item.category, iconName: item.iconName, customIconText: item.customIconText, colorHex: item.colorHex, startDate: item.startDate, endDate: item.endDate, activeDays: item.activeDays, reminderTime: item.reminderTime, targetCount: item.targetCount, dailyStartTime: item.dailyStartTime, dailyEndTime: item.dailyEndTime, targetMinutes: item.targetMinutes, targetDays: item.targetDays, sortOrder: item.sortOrder, isActive: item.isActive, isArchived: item.isArchived, createdAt: item.createdAt, updatedAt: item.updatedAt)
             context.insert(habit)
             habitsByID[item.id] = habit
         }
 
         var cardsByID: [UUID: TaskCard] = [:]
         for item in package.cards {
-            let card = TaskCard(id: item.id, habit: item.habitID.flatMap { habitsByID[$0] }, title: item.title, detail: item.detail, memo: item.memo, dueDate: item.dueDate, startTime: item.startTime, endTime: item.endTime, priority: item.priority, iconName: item.iconName, colorHex: item.colorHex, sortOrder: item.sortOrder, isCompleted: item.isCompleted, completedAt: item.completedAt, repeatRule: item.repeatRule, tags: item.tags, createdAt: item.createdAt, updatedAt: item.updatedAt)
+            let card = TaskCard(id: item.id, habit: item.habitID.flatMap { habitsByID[$0] }, title: item.title, detail: item.detail, memo: item.memo, dueDate: item.dueDate, startTime: item.startTime, endTime: item.endTime, priority: item.priority, iconName: item.iconName, colorHex: item.colorHex, sortOrder: item.sortOrder, isCompleted: item.isCompleted, completedAt: item.completedAt, repeatRule: item.repeatRule, reminderTime: item.reminderTime, tags: item.tags, createdAt: item.createdAt, updatedAt: item.updatedAt)
             context.insert(card)
             cardsByID[item.id] = card
         }
@@ -130,7 +133,7 @@ enum BackupService {
             context.insert(CompletionRecord(id: item.id, habit: item.habitID.flatMap { habitsByID[$0] }, taskCard: item.taskCardID.flatMap { cardsByID[$0] }, targetDate: item.targetDate, completedAt: item.completedAt, status: item.status, memo: item.memo))
         }
         for item in package.settings {
-            context.insert(AppSettings(id: item.id, theme: item.theme, notificationsEnabled: item.notificationsEnabled, hapticsEnabled: item.hapticsEnabled, backupReminderEnabled: item.backupReminderEnabled, lastBackupDate: item.lastBackupDate, hasCompletedOnboarding: item.hasCompletedOnboarding))
+            context.insert(AppSettings(id: item.id, theme: item.theme, notificationsEnabled: item.notificationsEnabled, hapticsEnabled: item.hapticsEnabled, backupReminderEnabled: item.backupReminderEnabled, lastBackupDate: item.lastBackupDate, hasCompletedOnboarding: item.hasCompletedOnboarding, displayName: item.displayName))
         }
         try context.save()
     }

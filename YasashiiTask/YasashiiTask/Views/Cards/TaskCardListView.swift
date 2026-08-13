@@ -24,10 +24,10 @@ struct TaskCardListView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button("カードを追加", systemImage: "plus") {
+                Button("タスクを追加", systemImage: "plus") {
                     isCreatingCard = true
                 }
-                .accessibilityHint("新しいカードの入力画面を開きます")
+                .accessibilityHint("新しいタスクの入力画面を開きます")
             }
         }
         .background(Color(.systemGroupedBackground))
@@ -42,7 +42,7 @@ struct TaskCardListView: View {
             TaskCardFormView(habit: habit, card: card, nextSortOrder: card.sortOrder)
         }
         .confirmationDialog(
-            "カードを削除しますか？",
+            "タスクを削除しますか？",
             isPresented: deletionBinding,
             titleVisibility: .visible
         ) {
@@ -64,9 +64,9 @@ struct TaskCardListView: View {
 
     private var emptyState: some View {
         ContentUnavailableView {
-            Label("カードはまだありません", systemImage: "rectangle.stack")
+            Label("タスクはまだありません", systemImage: "rectangle.stack")
         } description: {
-            Text("右上の＋ボタンから、この習慣にカードを追加できます。")
+            Text("右上の＋ボタンから、この習慣にタスクを追加できます。")
         }
         .accessibilityElement(children: .combine)
     }
@@ -93,7 +93,7 @@ struct TaskCardListView: View {
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
-        .accessibilityLabel("\(habit.title)のカード一覧")
+        .accessibilityLabel("\(habit.title)のタスク一覧")
     }
 
     private var deletionBinding: Binding<Bool> {

@@ -5,6 +5,8 @@ struct TaskCardFormView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @State private var viewModel: TaskCardFormViewModel
+    @State private var isPriorityDialogPresented = false
+    @State private var isFrequencyDialogPresented = false
 
     private let icons = ["rectangle.stack", "checkmark.square", "book", "pencil", "figure.walk", "music.note", "heart", "briefcase"]
     private let colors = ["#10B981", "#60A5FA", "#FBBF24", "#F472B6", "#A78BFA"]
@@ -17,20 +19,24 @@ struct TaskCardFormView: View {
         NavigationStack {
             Form {
                 Section("基本情報") {
-                    TextField("カード名（必須）", text: $viewModel.title)
+                    TextField("タスク名（必須）", text: $viewModel.title)
                     TextField("内容", text: $viewModel.detail, axis: .vertical).lineLimit(2...5)
                     TextField("メモ", text: $viewModel.memo, axis: .vertical).lineLimit(2...5)
                 }
 
                 Section("期限と時刻") {
                     Toggle("期限を設定", isOn: $viewModel.hasDueDate)
+                        .controlSize(.small)
                     if viewModel.hasDueDate {
                         DatePicker("期限", selection: $viewModel.dueDate, displayedComponents: .date)
+                            .environment(\.locale, Locale(identifier: "ja_JP"))
                     }
                     Toggle("開始時刻を設定", isOn: $viewModel.hasStartTime)
+                        .controlSize(.small)
                     if viewModel.hasStartTime {
                         DatePicker("開始時刻", selection: $viewModel.startTime, displayedComponents: .hourAndMinute)
                         Toggle("終了時刻を設定", isOn: $viewModel.hasEndTime)
+                            .controlSize(.small)
                         if viewModel.hasEndTime {
                             DatePicker("終了時刻", selection: $viewModel.endTime, displayedComponents: .hourAndMinute)
                         }
@@ -38,18 +44,49 @@ struct TaskCardFormView: View {
                 }
 
                 Section("分類") {
-                    Picker("優先度", selection: $viewModel.priority) {
-                        Text("低い").tag("low")
-                        Text("通常").tag("normal")
-                        Text("高い").tag("high")
+                    Button {
+                        isPriorityDialogPresented = true
+                    } label: {
+                        HStack {
+                            Text("優先度")
+                                .foregroundStyle(.primary)
+                            Spacer()
+                            Text(priorityName(viewModel.priority))
+                                .foregroundStyle(.tint)
+                            Image(systemName: "chevron.up.chevron.down")
+                                .font(.caption)
+                                .foregroundStyle(.tint)
+                        }
                     }
-                    Picker("繰り返し", selection: $viewModel.repeatRule) {
-                        Text("なし").tag("none")
-                        Text("毎日").tag("daily")
-                        Text("毎週").tag("weekly")
-                        Text("毎月").tag("monthly")
+                    .buttonStyle(.plain)
+                    Button {
+                        isFrequencyDialogPresented = true
+                    } label: {
+                        HStack {
+                            Text("頻度")
+                                .foregroundStyle(.primary)
+                            Spacer()
+                            Text(frequencyName(viewModel.repeatRule))
+                                .foregroundStyle(.tint)
+                            Image(systemName: "chevron.up.chevron.down")
+                                .font(.caption)
+                                .foregroundStyle(.tint)
+                        }
                     }
+                    .buttonStyle(.plain)
                     TextField("タグ（読書、勉強）", text: $viewModel.tagsText)
+                }
+
+                Section {
+                    Toggle("リマインダーを設定", isOn: $viewModel.hasReminder)
+                        .controlSize(.small)
+                    if viewModel.hasReminder {
+                        DatePicker("通知時刻", selection: $viewModel.reminderTime, displayedComponents: .hourAndMinute)
+                    }
+                } header: {
+                    Text("リマインダー")
+                } footer: {
+                    Text("設定した頻度の日に通知します。初回保存時に通知の許可を確認します。")
                 }
 
                 Section("見た目") {
@@ -80,6 +117,14 @@ struct TaskCardFormView: View {
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(
+                LinearGradient(
+                    colors: [.white, Color(red: 0.92, green: 0.99, blue: 0.97)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
             .navigationTitle(viewModel.navigationTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -95,6 +140,52 @@ struct TaskCardFormView: View {
             } message: {
                 Text(viewModel.errorMessage ?? "不明なエラーです。")
             }
+            .confirmationDialog("優先度を選択", isPresented: $isPriorityDialogPresented, titleVisibility: .visible) {
+                priorityButton("低い", value: "low")
+                priorityButton("通常", value: "normal")
+                priorityButton("高い", value: "high")
+                Button("キャンセル", role: .cancel) {}
+            }
+            .confirmationDialog("頻度を選択", isPresented: $isFrequencyDialogPresented, titleVisibility: .visible) {
+                frequencyButton("1回だけ", value: "none")
+                frequencyButton("毎日", value: "daily")
+                frequencyButton("平日", value: "weekdays")
+                frequencyButton("週末", value: "weekends")
+                frequencyButton("毎週", value: "weekly")
+                frequencyButton("毎月", value: "monthly")
+                Button("キャンセル", role: .cancel) {}
+            }
+        }
+    }
+
+    private func priorityButton(_ title: String, value: String) -> some View {
+        Button(viewModel.priority == value ? "✓ \(title)" : title) {
+            viewModel.priority = value
+        }
+    }
+
+    private func priorityName(_ value: String) -> String {
+        switch value {
+        case "low": "低い"
+        case "high": "高い"
+        default: "通常"
+        }
+    }
+
+    private func frequencyButton(_ title: String, value: String) -> some View {
+        Button(viewModel.repeatRule == value ? "✓ \(title)" : title) {
+            viewModel.repeatRule = value
+        }
+    }
+
+    private func frequencyName(_ value: String) -> String {
+        switch value {
+        case "daily": "毎日"
+        case "weekdays": "平日"
+        case "weekends": "週末"
+        case "weekly": "毎週"
+        case "monthly": "毎月"
+        default: "1回だけ"
         }
     }
 
@@ -109,6 +200,7 @@ struct TaskCardFormView: View {
         }
         do {
             try modelContext.save()
+            Task { await NotificationService.updateReminder(for: card) }
             dismiss()
         } catch {
             modelContext.rollback()
@@ -117,7 +209,7 @@ struct TaskCardFormView: View {
     }
 
     private func iconName(_ icon: String) -> String {
-        ["rectangle.stack": "カード", "checkmark.square": "チェック", "book": "読書", "pencil": "学習", "figure.walk": "運動", "music.note": "音楽", "heart": "健康", "briefcase": "仕事"][icon] ?? "アイコン"
+        ["rectangle.stack": "タスク", "checkmark.square": "チェック", "book": "読書", "pencil": "学習", "figure.walk": "運動", "music.note": "音楽", "heart": "健康", "briefcase": "仕事"][icon] ?? "アイコン"
     }
 
     private func colorName(_ color: String) -> String {

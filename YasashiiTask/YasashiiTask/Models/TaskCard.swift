@@ -17,6 +17,7 @@ final class TaskCard {
     var isCompleted: Bool
     var completedAt: Date?
     var repeatRule: String?
+    var reminderTime: Date?
     var tags: [String]
     var createdAt: Date
     var updatedAt: Date
@@ -44,6 +45,7 @@ final class TaskCard {
         isCompleted: Bool = false,
         completedAt: Date? = nil,
         repeatRule: String? = nil,
+        reminderTime: Date? = nil,
         tags: [String] = [],
         createdAt: Date = .now,
         updatedAt: Date = .now
@@ -63,10 +65,32 @@ final class TaskCard {
         self.isCompleted = isCompleted
         self.completedAt = completedAt
         self.repeatRule = repeatRule
+        self.reminderTime = reminderTime
         self.tags = tags
         self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.checklistItems = []
         self.completionRecords = []
+    }
+
+    func isScheduled(on date: Date, calendar: Calendar = .current) -> Bool {
+        let referenceDate = dueDate ?? createdAt
+        let weekday = calendar.component(.weekday, from: date)
+
+        switch repeatRule {
+        case "daily":
+            return true
+        case "weekdays":
+            return (2...6).contains(weekday)
+        case "weekends":
+            return weekday == 1 || weekday == 7
+        case "weekly":
+            return weekday == calendar.component(.weekday, from: referenceDate)
+        case "monthly":
+            return calendar.component(.day, from: date) == calendar.component(.day, from: referenceDate)
+        default:
+            guard let dueDate else { return true }
+            return calendar.isDate(dueDate, inSameDayAs: date)
+        }
     }
 }

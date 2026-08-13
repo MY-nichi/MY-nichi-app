@@ -23,7 +23,7 @@ struct BackupRestoreView: View {
             Section {
                 Label("習慣 \(habits.count)件", systemImage: "leaf")
                 Label("カード \(cards.count)件", systemImage: "rectangle.stack")
-                Label("完了履歴 \(completionRecords.filter { $0.status == "completed" }.count)件", systemImage: "checkmark.circle")
+                Label("完了履歴 \(completionRecords.filter(\.isCompletedStatus).count)件", systemImage: "checkmark.circle")
             } header: {
                 Text("現在のデータ")
             }

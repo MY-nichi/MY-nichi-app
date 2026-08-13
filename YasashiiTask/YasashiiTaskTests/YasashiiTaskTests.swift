@@ -154,12 +154,40 @@ struct YasashiiTaskTests {
         viewModel.toggleCompletion(of: card, using: context, date: date)
         #expect(card.isCompleted)
         #expect(card.completedAt == date)
-        #expect(card.completionRecords.first?.status == "completed")
+        #expect(card.completionRecords.first?.status == TaskAchievement.achieved.rawValue)
+        #expect(viewModel.achievement(for: card, date: date) == .achieved)
 
         viewModel.toggleCompletion(of: card, using: context, date: date)
         #expect(!card.isCompleted)
         #expect(card.completedAt == nil)
         #expect(card.completionRecords.first?.status == "pending")
+    }
+
+    @Test @MainActor func achievementStampCanBeChangedAndLegacyCompletionIsSupported() throws {
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(
+            for: Habit.self,
+            TaskCard.self,
+            ChecklistItem.self,
+            CompletionRecord.self,
+            AppSettings.self,
+            configurations: configuration
+        )
+        let context = container.mainContext
+        let card = TaskCard(title: "ピアノの練習")
+        let viewModel = TodayViewModel()
+        let date = Date(timeIntervalSince1970: 1_721_260_800)
+
+        viewModel.setAchievement(.needsPractice, of: card, using: context, date: date)
+        #expect(viewModel.achievement(for: card, date: date) == .needsPractice)
+
+        viewModel.setAchievement(.excellent, of: card, using: context, date: date)
+        #expect(card.completionRecords.first?.status == TaskAchievement.excellent.rawValue)
+        #expect(viewModel.achievement(for: card, date: date) == .excellent)
+
+        card.completionRecords.first?.status = "completed"
+        #expect(viewModel.achievement(for: card, date: date) == .achieved)
+        #expect(card.completionRecords.first?.isCompletedStatus == true)
     }
 
     @Test @MainActor func timelineSortsTimesAndSeparatesUntimedCards() {
@@ -288,6 +316,28 @@ struct YasashiiTaskTests {
         #expect(habitForm.errorMessage == "習慣名は100文字以内で入力してください。")
         #expect(cardForm.save() == nil)
         #expect(cardForm.errorMessage == "カード名は100文字以内で入力してください。")
+    }
+
+    @Test @MainActor func habitCalculatesPlannedDailyDuration() {
+        let calendar = Calendar(identifier: .gregorian)
+        let start = calendar.date(from: DateComponents(year: 2026, month: 7, day: 20, hour: 9))!
+        let end = calendar.date(from: DateComponents(year: 2026, month: 7, day: 20, hour: 10, minute: 30))!
+        let habit = Habit(title: "ピアノ", dailyStartTime: start, dailyEndTime: end, targetMinutes: 60, targetDays: 30)
+
+        #expect(habit.plannedDurationMinutes == 90)
+        #expect(habit.targetMinutes == 60)
+        #expect(habit.targetDays == 30)
+    }
+
+    @Test @MainActor func taskFrequencyChoosesScheduledDays() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let monday = calendar.date(from: DateComponents(year: 2026, month: 7, day: 20))!
+        let sunday = calendar.date(from: DateComponents(year: 2026, month: 7, day: 19))!
+        let weekdayCard = TaskCard(title: "平日の練習", repeatRule: "weekdays")
+
+        #expect(weekdayCard.isScheduled(on: monday, calendar: calendar))
+        #expect(!weekdayCard.isScheduled(on: sunday, calendar: calendar))
     }
 
 }

@@ -10,6 +10,7 @@ final class AppSettings {
     var backupReminderEnabled: Bool
     var lastBackupDate: Date?
     var hasCompletedOnboarding: Bool
+    var displayName: String?
 
     init(
         id: UUID = UUID(),
@@ -18,7 +19,8 @@ final class AppSettings {
         hapticsEnabled: Bool = true,
         backupReminderEnabled: Bool = false,
         lastBackupDate: Date? = nil,
-        hasCompletedOnboarding: Bool = false
+        hasCompletedOnboarding: Bool = false,
+        displayName: String? = nil
     ) {
         self.id = id
         self.theme = theme
@@ -27,5 +29,6 @@ final class AppSettings {
         self.backupReminderEnabled = backupReminderEnabled
         self.lastBackupDate = lastBackupDate
         self.hasCompletedOnboarding = hasCompletedOnboarding
+        self.displayName = displayName
     }
 }

@@ -85,7 +85,18 @@ struct ProgressDashboardView: View {
             } else {
                 ForEach(snapshot.habitProgress) { progress in
                     HStack(spacing: 12) {
-                        Image(systemName: progress.habit.iconName)
+                        Group {
+                            if progress.habit.iconName == "sparkles",
+                               let customText = progress.habit.customIconText,
+                               !customText.isEmpty {
+                                Text(customText)
+                                    .font(.caption.bold())
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.5)
+                            } else {
+                                Image(systemName: progress.habit.iconName)
+                            }
+                        }
                             .foregroundStyle(Color(red: 0.06, green: 0.58, blue: 0.42))
                             .frame(width: 36, height: 36)
                             .background(Color(red: 0.06, green: 0.58, blue: 0.42).opacity(0.1), in: RoundedRectangle(cornerRadius: 10))

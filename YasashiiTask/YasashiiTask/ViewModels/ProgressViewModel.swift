@@ -32,7 +32,7 @@ final class ProgressViewModel {
         date: Date = .now,
         calendar: Calendar = .current
     ) -> ProgressSnapshot {
-        let completedRecords = records.filter { $0.status == "completed" }
+        let completedRecords = records.filter(\.isCompletedStatus)
         let today = calendar.startOfDay(for: date)
         let weekStart = calendar.date(byAdding: .day, value: -6, to: today) ?? today
         let monthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: date)) ?? today
