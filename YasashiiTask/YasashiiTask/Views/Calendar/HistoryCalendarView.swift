@@ -4,8 +4,11 @@ import SwiftUI
 struct HistoryCalendarView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var records: [CompletionRecord]
+    @Query private var habits: [Habit]
+    @Query private var cards: [TaskCard]
     @State private var viewModel = CalendarViewModel()
-    @State private var selectedRecord: CompletionRecord?
+    @State private var selectedHabit: Habit?
+    @State private var selectedCard: TaskCard?
     @State private var errorMessage: String?
 
     private let calendar = Calendar.current
@@ -13,8 +16,40 @@ struct HistoryCalendarView: View {
     private let weekdays = ["日", "月", "火", "水", "木", "金", "土"]
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 5), count: 7)
 
-    private var selectedRecords: [CompletionRecord] {
-        viewModel.completedRecords(on: viewModel.selectedDate, from: records, calendar: calendar)
+    private var selectedHabits: [Habit] {
+        let selectedDay = calendar.startOfDay(for: viewModel.selectedDate)
+        return habits
+            .filter { habit in
+                guard habit.isActive, !habit.isArchived else { return false }
+                guard selectedDay >= calendar.startOfDay(for: habit.startDate) else { return false }
+                if let endDate = habit.endDate,
+                   selectedDay > calendar.startOfDay(for: endDate) {
+                    return false
+                }
+                let weekday = calendar.component(.weekday, from: selectedDay)
+                return habit.activeDays.isEmpty || habit.activeDays.contains(weekday)
+            }
+            .sorted {
+                if $0.reminderTime != $1.reminderTime {
+                    return ($0.reminderTime ?? .distantFuture) < ($1.reminderTime ?? .distantFuture)
+                }
+                if $0.sortOrder == $1.sortOrder { return $0.createdAt < $1.createdAt }
+                return $0.sortOrder < $1.sortOrder
+            }
+    }
+
+    private var selectedTasks: [TaskCard] {
+        cards
+            .filter { card in
+                guard let dueDate = card.dueDate else { return false }
+                return calendar.isDate(dueDate, inSameDayAs: viewModel.selectedDate)
+            }
+            .sorted {
+                if $0.reminderTime != $1.reminderTime {
+                    return ($0.reminderTime ?? .distantFuture) < ($1.reminderTime ?? .distantFuture)
+                }
+                return $0.sortOrder < $1.sortOrder
+            }
     }
 
     var body: some View {
@@ -30,12 +65,20 @@ struct HistoryCalendarView: View {
             .background(Color(.systemGroupedBackground))
             .navigationTitle("カレンダー")
         }
-        .sheet(item: $selectedRecord) { record in
+        .sheet(item: $selectedHabit) { habit in
             AchievementPickerSheet(
-                cardTitle: record.taskCard?.title ?? record.habit?.title ?? "完了した項目",
-                selectedAchievement: record.achievement
+                cardTitle: habit.title,
+                selectedAchievement: achievement(for: habit)
             ) { achievement in
-                setAchievement(achievement, for: record)
+                setAchievement(achievement, for: habit)
+            }
+        }
+        .sheet(item: $selectedCard) { card in
+            AchievementPickerSheet(
+                cardTitle: card.title,
+                selectedAchievement: achievement(for: card)
+            ) { achievement in
+                setAchievement(achievement, for: card)
             }
         }
         .alert("保存できませんでした", isPresented: Binding(
@@ -141,67 +184,118 @@ struct HistoryCalendarView: View {
             ))
             .font(.title3.bold())
 
-            if selectedRecords.isEmpty {
-                Label("この日の完了記録はありません", systemImage: "tray")
+            Text("習慣")
+                .font(.headline)
+            if selectedHabits.isEmpty {
+                Label("この日の習慣はありません", systemImage: "leaf")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, 8)
             } else {
-                ForEach(selectedRecords) { record in
+                ForEach(selectedHabits) { habit in
+                    let achievement = achievement(for: habit)
                     Button {
-                        selectedRecord = record
+                        selectedHabit = habit
                     } label: {
-                        HStack(spacing: 12) {
-                            if let achievement = record.achievement {
-                                AchievementStampView(achievement: achievement, compact: true)
-                                    .frame(width: 34, height: 34)
-                            } else {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .font(.title2)
-                                    .foregroundStyle(emerald)
-                                    .frame(width: 34, height: 34)
-                                    .accessibilityHidden(true)
-                            }
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(record.taskCard?.title ?? record.habit?.title ?? "完了した項目")
-                                    .font(.headline)
-                                Text(record.achievement?.title ?? record.habit?.title ?? "スタンプを選ぶ")
-                                    .font(.caption)
-                                    .foregroundStyle(record.achievement?.color ?? Color.secondary)
-                            }
-                            Spacer()
-                            if let completedAt = record.completedAt {
-                                Text(completedAt.formatted(date: .omitted, time: .shortened))
-                                    .font(.caption.monospacedDigit())
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                        .padding(14)
-                        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
+                        HabitRowView(
+                            habit: habit,
+                            achievement: achievement,
+                            showsActiveStatus: false,
+                            isCompleted: achievement != nil,
+                            showsExecutionTime: true
+                        )
                     }
                     .buttonStyle(.plain)
-                    .accessibilityElement(children: .combine)
                     .accessibilityHint("押すと、できばえスタンプを変更できます")
+                }
+            }
+
+            Text("タスク")
+                .font(.headline)
+            if selectedTasks.isEmpty {
+                Label("この日のタスクはありません", systemImage: "rectangle.stack")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .padding(.vertical, 8)
+            } else {
+                ForEach(selectedTasks) { card in
+                    TaskCardRowView(
+                        card: card,
+                        achievement: achievement(for: card),
+                        showsDueDate: false,
+                        showsExecutionTime: true,
+                        strikesThroughCompletedTitle: false,
+                        usesSimpleCompletionStatus: true
+                    ) {
+                        selectedCard = card
+                    }
                 }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func setAchievement(_ achievement: TaskAchievement?, for record: CompletionRecord) {
-        let previousAchievement = record.achievement
-        let previousCompletedAt = record.completedAt
+    private func achievement(for habit: Habit) -> TaskAchievement? {
+        record(for: habit)?.achievement
+    }
 
-        record.achievement = achievement
-        record.completedAt = achievement == nil ? nil : (record.completedAt ?? .now)
+    private func achievement(for card: TaskCard) -> TaskAchievement? {
+        record(for: card)?.achievement
+    }
 
+    private func setAchievement(_ achievement: TaskAchievement?, for habit: Habit) {
+        if let record = record(for: habit) {
+            record.achievement = achievement
+            record.completedAt = achievement == nil ? nil : viewModel.selectedDate
+        } else if let achievement {
+            modelContext.insert(CompletionRecord(
+                habit: habit,
+                targetDate: calendar.startOfDay(for: viewModel.selectedDate),
+                completedAt: viewModel.selectedDate,
+                status: achievement.rawValue
+            ))
+        }
+        saveAchievement()
+    }
+
+    private func setAchievement(_ achievement: TaskAchievement?, for card: TaskCard) {
+        if let record = record(for: card) {
+            record.achievement = achievement
+            record.completedAt = achievement == nil ? nil : viewModel.selectedDate
+        } else if let achievement {
+            modelContext.insert(CompletionRecord(
+                habit: card.habit,
+                taskCard: card,
+                targetDate: calendar.startOfDay(for: viewModel.selectedDate),
+                completedAt: viewModel.selectedDate,
+                status: achievement.rawValue
+            ))
+        }
+        card.isCompleted = achievement != nil
+        card.completedAt = achievement == nil ? nil : viewModel.selectedDate
+        card.updatedAt = .now
+        saveAchievement()
+    }
+
+    private func saveAchievement() {
         do {
             try modelContext.save()
-            selectedRecord = nil
         } catch {
-            record.achievement = previousAchievement
-            record.completedAt = previousCompletedAt
+            modelContext.rollback()
             errorMessage = error.localizedDescription
+        }
+    }
+
+    private func record(for habit: Habit) -> CompletionRecord? {
+        records.first {
+            $0.habit == habit && $0.taskCard == nil &&
+                calendar.isDate($0.targetDate, inSameDayAs: viewModel.selectedDate)
+        }
+    }
+
+    private func record(for card: TaskCard) -> CompletionRecord? {
+        records.first {
+            $0.taskCard == card && calendar.isDate($0.targetDate, inSameDayAs: viewModel.selectedDate)
         }
     }
 }

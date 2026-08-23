@@ -2,6 +2,11 @@ import SwiftUI
 
 struct HabitRowView: View {
     let habit: Habit
+    var achievement: TaskAchievement? = nil
+    var showsActiveStatus = true
+    var isCompleted: Bool?
+    var showsExecutionTime = false
+    var showsSchedule = false
 
     private var habitColor: Color {
         let hex = habit.colorHex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
@@ -16,7 +21,10 @@ struct HabitRowView: View {
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
             Group {
-                if habit.iconName == "sparkles",
+                if let achievement {
+                    AchievementStampView(achievement: achievement, compact: true)
+                        .frame(width: 44, height: 44)
+                } else if habit.iconName == "sparkles",
                    let customText = habit.customIconText,
                    !customText.isEmpty {
                     Text(customText)
@@ -46,18 +54,33 @@ struct HabitRowView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
-                Label(
-                    habit.isActive ? "有効" : "お休み中",
-                    systemImage: habit.isActive ? "checkmark.circle.fill" : "pause.circle.fill"
-                )
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(habit.isActive ? habitColor : .secondary)
+                if showsActiveStatus {
+                    Label(
+                        habit.isActive ? "有効" : "お休み中",
+                        systemImage: habit.isActive ? "checkmark.circle.fill" : "pause.circle.fill"
+                    )
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(habit.isActive ? habitColor : .secondary)
+                }
 
-                if let minutes = habit.plannedDurationMinutes {
-                    Label("予定 \(minutes)分", systemImage: "clock")
+                if let isCompleted {
+                    Label(achievement?.title ?? (isCompleted ? "完了" : "未完了"), systemImage: isCompleted ? "checkmark.circle" : "circle")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(isCompleted ? .primary : habitColor)
+                }
+
+                if showsExecutionTime, let executionTime {
+                    Label(executionTime, systemImage: "clock")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
+
+                if showsSchedule, let scheduleText {
+                    Label(scheduleText, systemImage: "calendar.badge.clock")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
             }
 
             Spacer(minLength: 8)
@@ -69,12 +92,25 @@ struct HabitRowView: View {
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilitySummary)
-        .accessibilityHint("ダブルタップするとカード一覧を開きます")
     }
 
     private var accessibilitySummary: String {
         let detail = habit.detail.isEmpty ? "" : "、\(habit.detail)"
         let status = habit.isActive ? "有効" : "お休み中"
         return "\(habit.title)\(detail)、\(status)"
+    }
+
+    private var executionTime: String? {
+        habit.reminderTime?.formatted(date: .omitted, time: .shortened)
+    }
+
+    private var scheduleText: String? {
+        guard let reminderTime = habit.reminderTime else { return nil }
+        let days = habit.activeDays.isEmpty ? "毎日" : habit.activeDays.sorted().compactMap(weekdayName).joined(separator: "・")
+        return "\(days) \(reminderTime.formatted(date: .omitted, time: .shortened))"
+    }
+
+    private func weekdayName(_ weekday: Int) -> String? {
+        [1: "日", 2: "月", 3: "火", 4: "水", 5: "木", 6: "金", 7: "土"][weekday]
     }
 }

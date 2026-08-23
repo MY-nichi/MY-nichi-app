@@ -34,6 +34,7 @@ final class HabitsViewModel {
     func deletePendingHabit(using modelContext: ModelContext) {
         guard let habit = habitPendingDeletion else { return }
 
+        NotificationService.removeHabitReminder(for: habit.id)
         modelContext.delete(habit)
         habitPendingDeletion = nil
 

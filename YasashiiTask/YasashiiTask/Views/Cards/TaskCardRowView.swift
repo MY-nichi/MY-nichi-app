@@ -3,6 +3,11 @@ import SwiftUI
 struct TaskCardRowView: View {
     let card: TaskCard
     var achievement: TaskAchievement? = nil
+    var showsDueDate = true
+    var showsExecutionTime = false
+    var showsSchedule = false
+    var strikesThroughCompletedTitle = true
+    var usesSimpleCompletionStatus = false
     var onToggleCompletion: (() -> Void)?
 
     private var cardColor: Color {
@@ -41,7 +46,7 @@ struct TaskCardRowView: View {
                 Text(card.title)
                     .font(.headline)
                     .foregroundStyle(.primary)
-                    .strikethrough(card.isCompleted)
+                    .strikethrough(card.isCompleted && strikesThroughCompletedTitle)
                     .fixedSize(horizontal: false, vertical: true)
 
                 if !card.detail.isEmpty {
@@ -53,11 +58,17 @@ struct TaskCardRowView: View {
 
                 HStack(spacing: 10) {
                     Label(
-                        achievement?.title ?? (card.isCompleted ? "完了" : "未完了"),
+                        usesSimpleCompletionStatus ? (card.isCompleted ? "完了" : "未完了") : achievement?.title ?? (card.isCompleted ? "完了" : "未完了"),
                         systemImage: card.isCompleted ? "checkmark.circle" : "circle"
                     )
-                    if let dueDate = card.dueDate {
+                    if showsExecutionTime, let executionTime {
+                        Label(executionTime, systemImage: "clock")
+                    }
+                    if showsDueDate, let dueDate = card.dueDate {
                         Label(dueDate.formatted(date: .numeric, time: .omitted), systemImage: "calendar")
+                    }
+                    if showsSchedule, let scheduleText {
+                        Label(scheduleText, systemImage: "calendar.badge.clock")
                     }
                 }
                 .font(.caption.weight(.semibold))
@@ -91,5 +102,38 @@ struct TaskCardRowView: View {
         let status = achievement?.title ?? (card.isCompleted ? "完了" : "未完了")
         let detail = card.detail.isEmpty ? "" : "、\(card.detail)"
         return "\(card.title)\(detail)、\(status)"
+    }
+
+    private var executionTime: String? {
+        card.reminderTime?.formatted(date: .omitted, time: .shortened)
+    }
+
+    private var scheduleText: String? {
+        guard let reminderTime = card.reminderTime else { return nil }
+        let time = reminderTime.formatted(date: .omitted, time: .shortened)
+        switch card.repeatRule {
+        case "daily":
+            return "毎日 \(time)"
+        case "weekdays":
+            return "平日 \(time)"
+        case "weekends":
+            return "週末 \(time)"
+        case "weekly":
+            let weekday = weekdayText(from: card.dueDate ?? card.createdAt)
+            return "毎週\(weekday) \(time)"
+        case "monthly":
+            let day = Calendar.current.component(.day, from: card.dueDate ?? card.createdAt)
+            return "毎月\(day)日 \(time)"
+        default:
+            if let dueDate = card.dueDate {
+                return "\(weekdayText(from: dueDate)) \(time)"
+            }
+            return time
+        }
+    }
+
+    private func weekdayText(from date: Date) -> String {
+        let weekday = Calendar.current.component(.weekday, from: date)
+        return [1: "日", 2: "月", 3: "火", 4: "水", 5: "木", 6: "金", 7: "土"][weekday] ?? ""
     }
 }

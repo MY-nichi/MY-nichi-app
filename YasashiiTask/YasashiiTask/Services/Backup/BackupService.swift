@@ -138,6 +138,48 @@ enum BackupService {
         try context.save()
     }
 
+    static func importAdding(_ data: Data, using context: ModelContext) throws {
+        let package = try decode(data)
+        var usedHabitTitles = Set(try context.fetch(FetchDescriptor<Habit>()).map(\.title))
+
+        var habitsByID: [UUID: Habit] = [:]
+        for item in package.habits {
+            let title = uniqueHabitTitle(item.title, usedTitles: &usedHabitTitles)
+            let habit = Habit(id: UUID(), title: title, detail: item.detail, category: item.category, iconName: item.iconName, customIconText: item.customIconText, colorHex: item.colorHex, startDate: item.startDate, endDate: item.endDate, activeDays: item.activeDays, reminderTime: item.reminderTime, targetCount: item.targetCount, dailyStartTime: item.dailyStartTime, dailyEndTime: item.dailyEndTime, targetMinutes: item.targetMinutes, targetDays: item.targetDays, sortOrder: item.sortOrder, isActive: item.isActive, isArchived: item.isArchived, createdAt: item.createdAt, updatedAt: item.updatedAt)
+            context.insert(habit)
+            habitsByID[item.id] = habit
+        }
+
+        var cardsByID: [UUID: TaskCard] = [:]
+        for item in package.cards {
+            let card = TaskCard(id: UUID(), habit: item.habitID.flatMap { habitsByID[$0] }, title: item.title, detail: item.detail, memo: item.memo, dueDate: item.dueDate, startTime: item.startTime, endTime: item.endTime, priority: item.priority, iconName: item.iconName, colorHex: item.colorHex, sortOrder: item.sortOrder, isCompleted: item.isCompleted, completedAt: item.completedAt, repeatRule: item.repeatRule, reminderTime: item.reminderTime, tags: item.tags, createdAt: item.createdAt, updatedAt: item.updatedAt)
+            context.insert(card)
+            cardsByID[item.id] = card
+        }
+
+        for item in package.checklistItems {
+            context.insert(ChecklistItem(id: UUID(), taskCard: item.taskCardID.flatMap { cardsByID[$0] }, title: item.title, isCompleted: item.isCompleted, sortOrder: item.sortOrder))
+        }
+        for item in package.completionRecords {
+            context.insert(CompletionRecord(id: UUID(), habit: item.habitID.flatMap { habitsByID[$0] }, taskCard: item.taskCardID.flatMap { cardsByID[$0] }, targetDate: item.targetDate, completedAt: item.completedAt, status: item.status, memo: item.memo))
+        }
+        try context.save()
+    }
+
+    private static func uniqueHabitTitle(_ title: String, usedTitles: inout Set<String>) -> String {
+        guard usedTitles.contains(title) else {
+            usedTitles.insert(title)
+            return title
+        }
+        var number = 2
+        while usedTitles.contains("\(title) \(number)") {
+            number += 1
+        }
+        let uniqueTitle = "\(title) \(number)"
+        usedTitles.insert(uniqueTitle)
+        return uniqueTitle
+    }
+
     private static var encoder: JSONEncoder {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601

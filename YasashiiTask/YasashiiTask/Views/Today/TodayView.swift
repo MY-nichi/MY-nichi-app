@@ -4,9 +4,13 @@ import SwiftUI
 struct TodayView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var habits: [Habit]
+    @Query private var cards: [TaskCard]
     @Query private var settings: [AppSettings]
     @State private var viewModel = TodayViewModel()
+    @State private var selectedHabit: Habit?
     @State private var selectedCard: TaskCard?
+    @State private var isCreatingHabit = false
+    @State private var isCreatingCard = false
     private let today = Date.now
 
     private var todayHabits: [Habit] {
@@ -14,7 +18,7 @@ struct TodayView: View {
     }
 
     private var todayCards: [TaskCard] {
-        viewModel.cardsForToday(from: habits, date: today)
+        viewModel.independentCardsForToday(from: cards, date: today)
     }
 
     var body: some View {
@@ -31,12 +35,24 @@ struct TodayView: View {
             .background(Color(.systemGroupedBackground))
             .navigationTitle("今日")
             .toolbar {
-                NavigationLink {
-                    ProgressDashboardView()
-                } label: {
-                    Label("進捗を見る", systemImage: "chart.bar")
+                ToolbarItem(placement: .topBarLeading) {
+                    NavigationLink {
+                        ProgressDashboardView()
+                    } label: {
+                        Label("進捗を見る", systemImage: "chart.bar")
+                    }
+                    .accessibilityHint("進捗と振り返りの画面を開きます")
                 }
-                .accessibilityHint("進捗と振り返りの画面を開きます")
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu("追加", systemImage: "plus") {
+                        Button("習慣を追加", systemImage: "leaf") {
+                            isCreatingHabit = true
+                        }
+                        Button("タスクを追加", systemImage: "rectangle.stack") {
+                            isCreatingCard = true
+                        }
+                    }
+                }
             }
         }
         .overlay {
@@ -50,19 +66,13 @@ struct TodayView: View {
         } message: {
             Text(viewModel.errorMessage ?? "不明なエラーです。")
         }
-        .confirmationDialog(
-            viewModel.habitPendingDeletion != nil ? "習慣を削除しますか？" : "タスクを削除しますか？",
-            isPresented: deletionBinding,
-            titleVisibility: .visible
-        ) {
-            Button("削除する", role: .destructive) {
-                viewModel.deletePendingItem(using: modelContext)
+        .sheet(item: $selectedHabit) { habit in
+            AchievementPickerSheet(
+                cardTitle: habit.title,
+                selectedAchievement: viewModel.achievement(for: habit, date: today)
+            ) { achievement in
+                setAchievement(achievement, for: habit)
             }
-            Button("キャンセル", role: .cancel) {
-                viewModel.cancelDeletion()
-            }
-        } message: {
-            Text("関連するデータも削除されます。この操作は元に戻せません。")
         }
         .sheet(item: $selectedCard) { card in
             AchievementPickerSheet(
@@ -71,6 +81,12 @@ struct TodayView: View {
             ) { achievement in
                 setAchievement(achievement, for: card)
             }
+        }
+        .sheet(isPresented: $isCreatingHabit) {
+            HabitFormView(habit: nil, nextSortOrder: (habits.map(\.sortOrder).max() ?? -1) + 1)
+        }
+        .sheet(isPresented: $isCreatingCard) {
+            TaskCardFormView(card: nil, nextSortOrder: nextIndependentCardSortOrder)
         }
     }
 
@@ -83,7 +99,7 @@ struct TodayView: View {
                 .weekday(.wide)
                 .locale(Locale(identifier: "ja_JP"))
         ))
-            .font(.title3.weight(.semibold))
+            .font(.title.weight(.semibold))
             .foregroundStyle(.secondary)
             .fixedSize(horizontal: false, vertical: true)
             .accessibilityLabel("今日、\(today.formatted(date: .long, time: .omitted))")
@@ -91,26 +107,26 @@ struct TodayView: View {
 
     private var habitsSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("今日の習慣")
+            Text("習慣")
                 .font(.title2.bold())
             if todayHabits.isEmpty {
                 emptyMessage("今日の習慣はありません", icon: "leaf")
             } else {
                 ForEach(todayHabits) { habit in
-                    HStack {
-                        NavigationLink {
-                            TaskCardListView(habit: habit)
-                        } label: {
-                            HabitRowView(habit: habit)
-                        }
-                        .buttonStyle(.plain)
-                        Button("削除", systemImage: "trash") {
-                            viewModel.requestDeletion(of: habit)
-                        }
-                        .labelStyle(.iconOnly)
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
+                    let achievement = viewModel.achievement(for: habit, date: today)
+                    Button {
+                        selectedHabit = habit
+                    } label: {
+                        HabitRowView(
+                            habit: habit,
+                            achievement: achievement,
+                            showsActiveStatus: false,
+                            isCompleted: achievement != nil,
+                            showsExecutionTime: true
+                        )
                     }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("できばえスタンプ画面を開きます")
                 }
             }
         }
@@ -118,25 +134,21 @@ struct TodayView: View {
 
     private var cardsSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("今日のタスク")
+            Text("タスク")
                 .font(.title2.bold())
             if todayCards.isEmpty {
                 emptyMessage("今日のタスクはありません", icon: "rectangle.stack")
             } else {
                 ForEach(todayCards) { card in
-                    HStack {
-                        TaskCardRowView(
-                            card: card,
-                            achievement: viewModel.achievement(for: card, date: today)
-                        ) {
-                            selectedCard = card
-                        }
-                        Button("削除", systemImage: "trash") {
-                            viewModel.requestDeletion(of: card)
-                        }
-                        .labelStyle(.iconOnly)
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
+                    TaskCardRowView(
+                        card: card,
+                        achievement: viewModel.achievement(for: card, date: today),
+                        showsDueDate: false,
+                        showsExecutionTime: true,
+                        strikesThroughCompletedTitle: false,
+                        usesSimpleCompletionStatus: true
+                    ) {
+                        selectedCard = card
                     }
                 }
             }
@@ -150,6 +162,10 @@ struct TodayView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(18)
             .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
+    }
+
+    private var nextIndependentCardSortOrder: Int {
+        (cards.filter { $0.habit == nil }.map(\.sortOrder).max() ?? -1) + 1
     }
 
     private var completionOverlay: some View {
@@ -170,18 +186,27 @@ struct TodayView: View {
         Binding(get: { viewModel.errorMessage != nil }, set: { if !$0 { viewModel.clearError() } })
     }
 
-    private var deletionBinding: Binding<Bool> {
-        Binding(
-            get: { viewModel.isDeletionConfirmationPresented },
-            set: { if !$0 { viewModel.cancelDeletion() } }
-        )
+    private func setAchievement(_ achievement: TaskAchievement?, for habit: Habit) {
+        withAnimation(.easeInOut(duration: 0.22)) {
+            viewModel.setAchievement(achievement, of: habit, using: modelContext, date: today)
+        }
+        guard achievement != nil else { return }
+        if settings.first?.hapticsEnabled ?? true {
+            HapticService.playCompletionFeedback()
+        }
+        Task {
+            try? await Task.sleep(for: .milliseconds(750))
+            withAnimation(.easeOut(duration: 0.2)) {
+                viewModel.clearCompletionAnimation()
+            }
+        }
     }
 
     private func setAchievement(_ achievement: TaskAchievement?, for card: TaskCard) {
         withAnimation(.easeInOut(duration: 0.22)) {
             viewModel.setAchievement(achievement, of: card, using: modelContext, date: today)
         }
-        guard card.isCompleted else { return }
+        guard achievement != nil else { return }
         if settings.first?.hapticsEnabled ?? true {
             HapticService.playCompletionFeedback()
         }

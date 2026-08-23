@@ -59,23 +59,9 @@ private struct SettingsForm: View {
                 .onChange(of: settings.theme) { _, _ in save() }
             }
 
-            Section {
-                Toggle("完了時に振動", isOn: $settings.hapticsEnabled)
+            Section("リマインダー") {
+                Toggle("振動", isOn: $settings.hapticsEnabled)
                     .onChange(of: settings.hapticsEnabled) { _, _ in save() }
-            } header: {
-                Text("操作")
-            } footer: {
-                Text("カードを完了したとき、操作できたことを軽い振動で伝えます。")
-            }
-
-            Section {
-                LabeledContent("バックアップのお知らせ", value: "今後追加予定")
-                    .foregroundStyle(.secondary)
-                LabeledContent("タスク通知", value: "カードごとに設定")
-            } header: {
-                Text("通知の準備")
-            } footer: {
-                Text("タスク通知は、カードの作成・編集画面で時刻を設定できます。")
             }
 
             Section("データ") {

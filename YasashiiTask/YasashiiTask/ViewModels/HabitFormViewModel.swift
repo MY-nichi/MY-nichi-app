@@ -6,7 +6,6 @@ import Observation
 final class HabitFormViewModel {
     var title: String
     var detail: String
-    var category: String
     var iconName: String
     var customIconText: String
     var colorHex: String
@@ -22,6 +21,8 @@ final class HabitFormViewModel {
     var targetMinutes: Int
     var hasTargetDays: Bool
     var targetDays: Int
+    var hasReminder: Bool
+    var reminderTime: Date
     var isActive: Bool
     var errorMessage: String?
 
@@ -33,7 +34,6 @@ final class HabitFormViewModel {
         self.nextSortOrder = nextSortOrder
         self.title = habit?.title ?? ""
         self.detail = habit?.detail ?? ""
-        self.category = habit?.category ?? ""
         self.iconName = habit?.iconName ?? "checkmark.circle"
         self.customIconText = habit?.customIconText ?? ""
         self.colorHex = habit?.colorHex ?? "#10B981"
@@ -49,6 +49,8 @@ final class HabitFormViewModel {
         self.targetMinutes = habit?.targetMinutes ?? 30
         self.hasTargetDays = habit?.targetDays != nil
         self.targetDays = habit?.targetDays ?? 30
+        self.hasReminder = habit?.reminderTime != nil
+        self.reminderTime = habit?.reminderTime ?? .now
         self.isActive = habit?.isActive ?? true
     }
 
@@ -74,7 +76,6 @@ final class HabitFormViewModel {
         if let habit {
             habit.title = cleanedTitle
             habit.detail = detail.trimmingCharacters(in: .whitespacesAndNewlines)
-            habit.category = category.trimmingCharacters(in: .whitespacesAndNewlines)
             habit.iconName = iconName
             habit.customIconText = iconName == "sparkles" ? customIconText.trimmingCharacters(in: .whitespacesAndNewlines) : nil
             habit.colorHex = colorHex
@@ -82,10 +83,11 @@ final class HabitFormViewModel {
             habit.endDate = hasEndDate ? endDate : nil
             habit.activeDays = activeDays.sorted()
             habit.targetCount = max(1, targetCount)
-            habit.dailyStartTime = hasDailyTime ? dailyStartTime : nil
-            habit.dailyEndTime = hasDailyTime ? dailyEndTime : nil
+            habit.dailyStartTime = nil
+            habit.dailyEndTime = nil
             habit.targetMinutes = hasTargetMinutes ? max(1, targetMinutes) : nil
             habit.targetDays = hasTargetDays ? max(1, targetDays) : nil
+            habit.reminderTime = hasReminder ? reminderTime : nil
             habit.isActive = isActive
             habit.updatedAt = .now
             return habit
@@ -94,16 +96,16 @@ final class HabitFormViewModel {
         return Habit(
             title: cleanedTitle,
             detail: detail.trimmingCharacters(in: .whitespacesAndNewlines),
-            category: category.trimmingCharacters(in: .whitespacesAndNewlines),
             iconName: iconName,
             customIconText: iconName == "sparkles" ? customIconText.trimmingCharacters(in: .whitespacesAndNewlines) : nil,
             colorHex: colorHex,
             startDate: startDate,
             endDate: hasEndDate ? endDate : nil,
             activeDays: activeDays.sorted(),
+            reminderTime: hasReminder ? reminderTime : nil,
             targetCount: max(1, targetCount),
-            dailyStartTime: hasDailyTime ? dailyStartTime : nil,
-            dailyEndTime: hasDailyTime ? dailyEndTime : nil,
+            dailyStartTime: nil,
+            dailyEndTime: nil,
             targetMinutes: hasTargetMinutes ? max(1, targetMinutes) : nil,
             targetDays: hasTargetDays ? max(1, targetDays) : nil,
             sortOrder: nextSortOrder,

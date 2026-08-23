@@ -33,11 +33,11 @@ final class TaskCardFormViewModel {
     var checklistDrafts: [ChecklistDraft]
     var errorMessage: String?
 
-    let habit: Habit
+    let habit: Habit?
     let card: TaskCard?
     let nextSortOrder: Int
 
-    init(habit: Habit, card: TaskCard?, nextSortOrder: Int) {
+    init(habit: Habit?, card: TaskCard?, nextSortOrder: Int) {
         self.habit = habit
         self.card = card
         self.nextSortOrder = nextSortOrder
@@ -52,7 +52,7 @@ final class TaskCardFormViewModel {
         self.endTime = card?.endTime ?? .now
         self.priority = card?.priority ?? "normal"
         self.iconName = card?.iconName ?? "rectangle.stack"
-        self.colorHex = card?.colorHex ?? habit.colorHex
+        self.colorHex = card?.colorHex ?? habit?.colorHex ?? "#10B981"
         self.repeatRule = card?.repeatRule ?? "none"
         self.hasReminder = card?.reminderTime != nil
         self.reminderTime = card?.reminderTime ?? .now
@@ -84,23 +84,14 @@ final class TaskCardFormViewModel {
             errorMessage = "タスク名は100文字以内で入力してください。"
             return nil
         }
-        guard !hasEndTime || hasStartTime else {
-            errorMessage = "終了時刻を設定する場合は、開始時刻も設定してください。"
-            return nil
-        }
-        guard !hasEndTime || endTime >= startTime else {
-            errorMessage = "終了時刻は開始時刻以降にしてください。"
-            return nil
-        }
-
         let target = card ?? TaskCard(habit: habit, title: cleanedTitle, sortOrder: nextSortOrder)
         target.habit = habit
         target.title = cleanedTitle
         target.detail = detail.trimmingCharacters(in: .whitespacesAndNewlines)
         target.memo = memo.trimmingCharacters(in: .whitespacesAndNewlines)
         target.dueDate = hasDueDate ? dueDate : nil
-        target.startTime = hasStartTime ? startTime : nil
-        target.endTime = hasEndTime ? endTime : nil
+        target.startTime = nil
+        target.endTime = nil
         target.priority = priority
         target.iconName = iconName
         target.colorHex = colorHex

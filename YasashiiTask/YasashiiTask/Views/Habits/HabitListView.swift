@@ -23,14 +23,6 @@ struct HabitListView: View {
             }
             .navigationTitle("習慣")
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    NavigationLink {
-                        BackupRestoreView()
-                    } label: {
-                        Label("バックアップ", systemImage: "externaldrive")
-                    }
-                    .accessibilityHint("バックアップと復元の画面を開きます")
-                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("習慣を追加", systemImage: "plus") {
                         isCreatingHabit = true
@@ -98,31 +90,23 @@ struct HabitListView: View {
     private var habitList: some View {
         List {
             ForEach(visibleHabits) { habit in
-                NavigationLink {
-                    TaskCardListView(habit: habit)
+                Button {
+                    habitBeingEdited = habit
                 } label: {
-                    HabitRowView(habit: habit)
+                    HabitRowView(habit: habit, showsSchedule: true)
                 }
-                    .buttonStyle(.plain)
-                    .listRowInsets(
-                        EdgeInsets(top: 7, leading: 16, bottom: 7, trailing: 16)
-                    )
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(Color.clear)
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        Button("削除", systemImage: "trash", role: .destructive) {
-                            viewModel.requestDeletion(of: habit)
-                        }
+                .buttonStyle(.plain)
+                .accessibilityHint("習慣の編集画面を開きます")
+                .listRowInsets(
+                    EdgeInsets(top: 7, leading: 16, bottom: 7, trailing: 16)
+                )
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    Button("削除", systemImage: "trash", role: .destructive) {
+                        viewModel.requestDeletion(of: habit)
                     }
-                    .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                        Button("編集", systemImage: "pencil") {
-                            habitBeingEdited = habit
-                        }
-                        .tint(.blue)
-                    }
-                    .accessibilityAction(named: "編集") {
-                        habitBeingEdited = habit
-                    }
+                }
             }
         }
         .listStyle(.plain)

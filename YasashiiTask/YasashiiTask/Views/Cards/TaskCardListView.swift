@@ -74,10 +74,15 @@ struct TaskCardListView: View {
     private var cardList: some View {
         List {
             ForEach(cards) { card in
-                TaskCardRowView(card: card)
-                    .onTapGesture {
+                HStack(spacing: 8) {
+                    TaskCardRowView(card: card, showsDueDate: false, showsSchedule: true)
+                    Button("編集", systemImage: "pencil") {
                         cardBeingEdited = card
                     }
+                    .labelStyle(.iconOnly)
+                    .buttonStyle(.borderless)
+                    .accessibilityHint("タスクの編集画面を開きます")
+                }
                     .listRowInsets(EdgeInsets(top: 7, leading: 16, bottom: 7, trailing: 16))
                     .listRowSeparator(.hidden)
                     .listRowBackground(Color.clear)
@@ -85,9 +90,6 @@ struct TaskCardListView: View {
                         Button("削除", systemImage: "trash", role: .destructive) {
                             viewModel.requestDeletion(of: card)
                         }
-                    }
-                    .accessibilityAction(named: "編集") {
-                        cardBeingEdited = card
                     }
             }
         }

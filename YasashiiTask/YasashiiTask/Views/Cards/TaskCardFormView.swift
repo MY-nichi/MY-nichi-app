@@ -1,17 +1,18 @@
 import SwiftData
 import SwiftUI
+import UIKit
 
 struct TaskCardFormView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Query private var settings: [AppSettings]
     @State private var viewModel: TaskCardFormViewModel
-    @State private var isPriorityDialogPresented = false
-    @State private var isFrequencyDialogPresented = false
+    @State private var isDeleteConfirmationPresented = false
 
     private let icons = ["rectangle.stack", "checkmark.square", "book", "pencil", "figure.walk", "music.note", "heart", "briefcase"]
-    private let colors = ["#10B981", "#60A5FA", "#FBBF24", "#F472B6", "#A78BFA"]
+    private let colors = ["#10B981", "#60A5FA", "#06B6D4", "#84CC16", "#FBBF24", "#F97316", "#EF4444", "#F472B6", "#A78BFA", "#64748B"]
 
-    init(habit: Habit, card: TaskCard?, nextSortOrder: Int) {
+    init(habit: Habit? = nil, card: TaskCard?, nextSortOrder: Int) {
         _viewModel = State(initialValue: TaskCardFormViewModel(habit: habit, card: card, nextSortOrder: nextSortOrder))
     }
 
@@ -20,100 +21,99 @@ struct TaskCardFormView: View {
             Form {
                 Section("基本情報") {
                     TextField("タスク名（必須）", text: $viewModel.title)
-                    TextField("内容", text: $viewModel.detail, axis: .vertical).lineLimit(2...5)
-                    TextField("メモ", text: $viewModel.memo, axis: .vertical).lineLimit(2...5)
+                    TextField("内容", text: $viewModel.detail)
+                    TextField("メモ", text: $viewModel.memo)
                 }
 
-                Section("期限と時刻") {
-                    Toggle("期限を設定", isOn: $viewModel.hasDueDate)
+                Section {
+                    Toggle("日時を設定", isOn: $viewModel.hasDueDate)
                         .controlSize(.small)
                     if viewModel.hasDueDate {
                         DatePicker("期限", selection: $viewModel.dueDate, displayedComponents: .date)
                             .environment(\.locale, Locale(identifier: "ja_JP"))
                     }
-                    Toggle("開始時刻を設定", isOn: $viewModel.hasStartTime)
-                        .controlSize(.small)
-                    if viewModel.hasStartTime {
-                        DatePicker("開始時刻", selection: $viewModel.startTime, displayedComponents: .hourAndMinute)
-                        Toggle("終了時刻を設定", isOn: $viewModel.hasEndTime)
-                            .controlSize(.small)
-                        if viewModel.hasEndTime {
-                            DatePicker("終了時刻", selection: $viewModel.endTime, displayedComponents: .hourAndMinute)
-                        }
-                    }
-                }
-
-                Section("分類") {
-                    Button {
-                        isPriorityDialogPresented = true
-                    } label: {
-                        HStack {
-                            Text("優先度")
-                                .foregroundStyle(.primary)
-                            Spacer()
-                            Text(priorityName(viewModel.priority))
-                                .foregroundStyle(.tint)
-                            Image(systemName: "chevron.up.chevron.down")
-                                .font(.caption)
-                                .foregroundStyle(.tint)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    Button {
-                        isFrequencyDialogPresented = true
-                    } label: {
-                        HStack {
-                            Text("頻度")
-                                .foregroundStyle(.primary)
-                            Spacer()
-                            Text(frequencyName(viewModel.repeatRule))
-                                .foregroundStyle(.tint)
-                            Image(systemName: "chevron.up.chevron.down")
-                                .font(.caption)
-                                .foregroundStyle(.tint)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    TextField("タグ（読書、勉強）", text: $viewModel.tagsText)
-                }
-
-                Section {
-                    Toggle("リマインダーを設定", isOn: $viewModel.hasReminder)
+                    Toggle("リマインダー", isOn: $viewModel.hasReminder)
                         .controlSize(.small)
                     if viewModel.hasReminder {
                         DatePicker("通知時刻", selection: $viewModel.reminderTime, displayedComponents: .hourAndMinute)
                     }
-                } header: {
-                    Text("リマインダー")
-                } footer: {
-                    Text("設定した頻度の日に通知します。初回保存時に通知の許可を確認します。")
                 }
 
-                Section("見た目") {
-                    Picker("アイコン", selection: $viewModel.iconName) {
-                        ForEach(icons, id: \.self) { icon in
-                            Label(iconName(icon), systemImage: icon).tag(icon)
-                        }
-                    }
-                    Picker("色", selection: $viewModel.colorHex) {
-                        ForEach(colors, id: \.self) { color in
-                            Text(colorName(color)).tag(color)
-                        }
-                    }
-                }
-
-                Section("チェックリスト") {
-                    ForEach($viewModel.checklistDrafts) { $draft in
+                Section("分類") {
+                    Menu {
+                        priorityButton("低い", value: "low")
+                        priorityButton("通常", value: "normal")
+                        priorityButton("高い", value: "high")
+                    } label: {
                         HStack {
-                            TextField("項目", text: $draft.title)
-                            Button("削除", systemImage: "minus.circle.fill", role: .destructive) {
-                                viewModel.removeChecklistDraft(id: draft.id)
-                            }
-                            .labelStyle(.iconOnly)
+                            Text("優先度")
+                            Spacer()
+                            Text(priorityName(viewModel.priority))
+                            Image(systemName: "chevron.up.chevron.down")
+                                .font(.caption)
                         }
+                        .foregroundStyle(.tint)
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
                     }
-                    Button("項目を追加", systemImage: "plus.circle") {
-                        viewModel.addChecklistDraft()
+                }
+
+                Section {
+                    Menu {
+                        ForEach(icons, id: \.self) { icon in
+                            Button {
+                                viewModel.iconName = icon
+                            } label: {
+                                Label(iconName(icon), systemImage: icon)
+                            }
+                        }
+                    } label: {
+                        pickerRow(
+                            title: "アイコン",
+                            value: iconName(viewModel.iconName),
+                            systemImage: viewModel.iconName
+                        )
+                    }
+                    .transaction { $0.animation = nil }
+
+                    Menu {
+                        ForEach(colors, id: \.self) { color in
+                            Button {
+                                viewModel.colorHex = color
+                            } label: {
+                                Label {
+                                    Text(colorName(color))
+                                } icon: {
+                                    Image(uiImage: colorCircleImage(color))
+                                        .renderingMode(.original)
+                                }
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 7) {
+                            Text("カラー")
+                            Spacer()
+                            Circle()
+                                .fill(colorValue(viewModel.colorHex))
+                                .frame(width: 16, height: 16)
+                                .overlay(Circle().stroke(.secondary.opacity(0.35), lineWidth: 1))
+                            Text(colorName(viewModel.colorHex))
+                                .frame(minWidth: 70, alignment: .trailing)
+                            Image(systemName: "chevron.up.chevron.down")
+                                .font(.caption)
+                        }
+                        .foregroundStyle(.tint)
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
+                    }
+                    .transaction { $0.animation = nil }
+                }
+
+                if viewModel.card != nil {
+                    Section {
+                        Button("タスクを削除", systemImage: "trash", role: .destructive) {
+                            isDeleteConfirmationPresented = true
+                        }
                     }
                 }
             }
@@ -140,20 +140,13 @@ struct TaskCardFormView: View {
             } message: {
                 Text(viewModel.errorMessage ?? "不明なエラーです。")
             }
-            .confirmationDialog("優先度を選択", isPresented: $isPriorityDialogPresented, titleVisibility: .visible) {
-                priorityButton("低い", value: "low")
-                priorityButton("通常", value: "normal")
-                priorityButton("高い", value: "high")
+            .confirmationDialog("タスクを削除しますか？", isPresented: $isDeleteConfirmationPresented, titleVisibility: .visible) {
+                Button("削除する", role: .destructive) {
+                    deleteCard()
+                }
                 Button("キャンセル", role: .cancel) {}
-            }
-            .confirmationDialog("頻度を選択", isPresented: $isFrequencyDialogPresented, titleVisibility: .visible) {
-                frequencyButton("1回だけ", value: "none")
-                frequencyButton("毎日", value: "daily")
-                frequencyButton("平日", value: "weekdays")
-                frequencyButton("週末", value: "weekends")
-                frequencyButton("毎週", value: "weekly")
-                frequencyButton("毎月", value: "monthly")
-                Button("キャンセル", role: .cancel) {}
+            } message: {
+                Text("関連する完了履歴も削除されます。この操作は元に戻せません。")
             }
         }
     }
@@ -172,23 +165,6 @@ struct TaskCardFormView: View {
         }
     }
 
-    private func frequencyButton(_ title: String, value: String) -> some View {
-        Button(viewModel.repeatRule == value ? "✓ \(title)" : title) {
-            viewModel.repeatRule = value
-        }
-    }
-
-    private func frequencyName(_ value: String) -> String {
-        switch value {
-        case "daily": "毎日"
-        case "weekdays": "平日"
-        case "weekends": "週末"
-        case "weekly": "毎週"
-        case "monthly": "毎月"
-        default: "1回だけ"
-        }
-    }
-
     private var errorBinding: Binding<Bool> {
         Binding(get: { viewModel.errorMessage != nil }, set: { if !$0 { viewModel.errorMessage = nil } })
     }
@@ -200,7 +176,7 @@ struct TaskCardFormView: View {
         }
         do {
             try modelContext.save()
-            Task { await NotificationService.updateReminder(for: card) }
+            Task { await NotificationService.updateReminder(for: card, hapticsEnabled: hapticsEnabled) }
             dismiss()
         } catch {
             modelContext.rollback()
@@ -208,12 +184,61 @@ struct TaskCardFormView: View {
         }
     }
 
+    private func deleteCard() {
+        guard let card = viewModel.card else { return }
+        NotificationService.removeTaskReminder(for: card.id)
+        modelContext.delete(card)
+        do {
+            try modelContext.save()
+            dismiss()
+        } catch {
+            modelContext.rollback()
+            viewModel.errorMessage = "タスクを削除できませんでした。もう一度お試しください。"
+        }
+    }
+
     private func iconName(_ icon: String) -> String {
         ["rectangle.stack": "タスク", "checkmark.square": "チェック", "book": "読書", "pencil": "学習", "figure.walk": "運動", "music.note": "音楽", "heart": "健康", "briefcase": "仕事"][icon] ?? "アイコン"
     }
 
+    private var hapticsEnabled: Bool {
+        settings.first?.hapticsEnabled ?? true
+    }
+
     private func colorName(_ color: String) -> String {
-        ["#10B981": "エメラルド", "#60A5FA": "ブルー", "#FBBF24": "イエロー", "#F472B6": "ピンク", "#A78BFA": "パープル"][color] ?? "色"
+        ["#10B981": "エメラルド", "#60A5FA": "ブルー", "#06B6D4": "水色", "#84CC16": "グリーン", "#FBBF24": "イエロー", "#F97316": "オレンジ", "#EF4444": "レッド", "#F472B6": "ピンク", "#A78BFA": "パープル", "#64748B": "グレー"][color] ?? "カラー"
+    }
+
+    private func colorValue(_ hex: String) -> Color {
+        let value = Int(hex.dropFirst(), radix: 16) ?? 0
+        return Color(
+            red: Double((value >> 16) & 0xFF) / 255,
+            green: Double((value >> 8) & 0xFF) / 255,
+            blue: Double(value & 0xFF) / 255
+        )
+    }
+
+    private func colorCircleImage(_ hex: String) -> UIImage {
+        let size = CGSize(width: 18, height: 18)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        return renderer.image { context in
+            UIColor(colorValue(hex)).setFill()
+            context.cgContext.fillEllipse(in: CGRect(origin: .zero, size: size).insetBy(dx: 1, dy: 1))
+        }.withRenderingMode(.alwaysOriginal)
+    }
+
+    private func pickerRow(title: String, value: String, systemImage: String) -> some View {
+        HStack(spacing: 7) {
+            Text(title)
+            Spacer()
+            Label(value, systemImage: systemImage)
+                .frame(minWidth: 96, alignment: .trailing)
+            Image(systemName: "chevron.up.chevron.down")
+                .font(.caption)
+        }
+        .foregroundStyle(.tint)
+        .frame(minHeight: 44)
+        .contentShape(Rectangle())
     }
 }
 

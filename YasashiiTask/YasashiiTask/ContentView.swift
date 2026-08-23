@@ -28,9 +28,9 @@ struct ContentView: View {
                     Label("習慣", systemImage: "leaf")
                 }
 
-            TimelineView()
+            IndependentTaskListView()
                 .tabItem {
-                    Label("タイムライン", systemImage: "clock")
+                    Label("タスク", systemImage: "checkmark.square")
                 }
 
             HistoryCalendarView()

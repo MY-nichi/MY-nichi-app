@@ -22,23 +22,23 @@ struct BackupRestoreView: View {
         List {
             Section {
                 Label("習慣 \(habits.count)件", systemImage: "leaf")
-                Label("カード \(cards.count)件", systemImage: "rectangle.stack")
+                Label("タスク \(cards.count)件", systemImage: "rectangle.stack")
                 Label("完了履歴 \(completionRecords.filter(\.isCompletedStatus).count)件", systemImage: "checkmark.circle")
             } header: {
                 Text("現在のデータ")
             }
 
             Section {
-                Button("JSONを書き出す", systemImage: "square.and.arrow.up") {
+                Button("バックアップを保存する", systemImage: "square.and.arrow.up") {
                     prepareExport()
                 }
-                Button("JSONから復元する", systemImage: "square.and.arrow.down") {
+                Button("バックアップから復元する", systemImage: "square.and.arrow.down") {
                     isImporting = true
                 }
             } header: {
                 Text("バックアップと復元")
             } footer: {
-                Text("復元すると、現在のデータはバックアップ内のデータへ置き換わります。")
+                Text("復元時に、現在のデータを置き換えるか、追加で取り込むかを選べます。")
             }
 
             if let message {
@@ -57,11 +57,12 @@ struct BackupRestoreView: View {
         .fileImporter(isPresented: $isImporting, allowedContentTypes: [.json], allowsMultipleSelection: false) { result in
             readImport(result)
         }
-        .confirmationDialog("バックアップから復元しますか？", isPresented: $isConfirmingRestore, titleVisibility: .visible) {
-            Button("現在のデータを置き換える", role: .destructive) { restore() }
+        .confirmationDialog("復元方法を選択", isPresented: $isConfirmingRestore, titleVisibility: .visible) {
+            Button("上書き復元", role: .destructive) { restore() }
+            Button("追加で取り込む") { importAdding() }
             Button("キャンセル", role: .cancel) { pendingRestoreData = nil }
         } message: {
-            Text("この操作は元に戻せません。必要であれば、先に現在のデータを書き出してください。")
+            Text("上書き復元は現在のデータを置き換えます。追加取り込みは現在のデータを残します。")
         }
         .alert("処理できませんでした", isPresented: errorBinding) {
             Button("OK") { errorMessage = nil }
@@ -106,6 +107,17 @@ struct BackupRestoreView: View {
             message = "バックアップから復元しました。"
         } catch {
             errorMessage = "バックアップを復元できませんでした。アプリを閉じずに、もう一度お試しください。"
+        }
+    }
+
+    private func importAdding() {
+        guard let pendingRestoreData else { return }
+        do {
+            try BackupService.importAdding(pendingRestoreData, using: modelContext)
+            self.pendingRestoreData = nil
+            message = "バックアップを追加で取り込みました。"
+        } catch {
+            errorMessage = "バックアップを追加できませんでした。アプリを閉じずに、もう一度お試しください。"
         }
     }
 }

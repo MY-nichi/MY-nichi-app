@@ -67,6 +67,9 @@ final class TodayViewModel {
                 return habit.activeDays.isEmpty || habit.activeDays.contains(weekday)
             }
             .sorted {
+                if $0.reminderTime != $1.reminderTime {
+                    return ($0.reminderTime ?? .distantFuture) < ($1.reminderTime ?? .distantFuture)
+                }
                 if $0.sortOrder == $1.sortOrder { return $0.createdAt < $1.createdAt }
                 return $0.sortOrder < $1.sortOrder
             }
@@ -74,7 +77,15 @@ final class TodayViewModel {
 
     func cardsForToday(from habits: [Habit], date: Date = .now, calendar: Calendar = .current) -> [TaskCard] {
         let todayHabits = habitsForToday(from: habits, date: date, calendar: calendar)
-        let cards = todayHabits.flatMap(\.taskCards).filter { card in
+        return scheduledCardsForToday(from: todayHabits.flatMap(\.taskCards), date: date, calendar: calendar)
+    }
+
+    func independentCardsForToday(from cards: [TaskCard], date: Date = .now, calendar: Calendar = .current) -> [TaskCard] {
+        scheduledCardsForToday(from: cards.filter { $0.habit == nil }, date: date, calendar: calendar)
+    }
+
+    private func scheduledCardsForToday(from cards: [TaskCard], date: Date, calendar: Calendar) -> [TaskCard] {
+        let cards = cards.filter { card in
             guard card.isScheduled(on: date, calendar: calendar) else { return false }
             if card.repeatRule != nil {
                 if card.isCompleted, let completedAt = card.completedAt {
@@ -93,8 +104,8 @@ final class TodayViewModel {
 
         return cards.sorted {
             if $0.isCompleted != $1.isCompleted { return !$0.isCompleted }
-            if $0.startTime != $1.startTime {
-                return ($0.startTime ?? .distantFuture) < ($1.startTime ?? .distantFuture)
+            if $0.reminderTime != $1.reminderTime {
+                return ($0.reminderTime ?? .distantFuture) < ($1.reminderTime ?? .distantFuture)
             }
             return $0.sortOrder < $1.sortOrder
         }
@@ -167,6 +178,45 @@ final class TodayViewModel {
         }
     }
 
+    func achievement(
+        for habit: Habit,
+        date: Date = .now,
+        calendar: Calendar = .current
+    ) -> TaskAchievement? {
+        completionRecord(for: habit, date: date, calendar: calendar)?.achievement
+    }
+
+    func setAchievement(
+        _ achievement: TaskAchievement?,
+        of habit: Habit,
+        using modelContext: ModelContext,
+        date: Date = .now,
+        calendar: Calendar = .current
+    ) {
+        let record = completionRecord(for: habit, date: date, calendar: calendar)
+
+        if let record {
+            record.achievement = achievement
+            record.completedAt = achievement == nil ? nil : date
+        } else if let achievement {
+            modelContext.insert(CompletionRecord(
+                habit: habit,
+                targetDate: calendar.startOfDay(for: date),
+                completedAt: date,
+                status: achievement.rawValue
+            ))
+        }
+        habit.updatedAt = date
+        recentlyCompletedCardID = achievement == nil ? nil : habit.id
+
+        do {
+            try modelContext.save()
+        } catch {
+            modelContext.rollback()
+            errorMessage = "完了状態を保存できませんでした。もう一度お試しください。"
+        }
+    }
+
     func toggleCompletion(
         of card: TaskCard,
         using modelContext: ModelContext,
@@ -191,6 +241,16 @@ final class TodayViewModel {
         calendar: Calendar
     ) -> CompletionRecord? {
         card.completionRecords.first { calendar.isDate($0.targetDate, inSameDayAs: date) }
+    }
+
+    private func completionRecord(
+        for habit: Habit,
+        date: Date,
+        calendar: Calendar
+    ) -> CompletionRecord? {
+        habit.completionRecords.first {
+            $0.taskCard == nil && calendar.isDate($0.targetDate, inSameDayAs: date)
+        }
     }
 }
 

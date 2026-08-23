@@ -60,11 +60,12 @@ struct YasashiiTaskTests {
     @Test @MainActor func habitFormCreatesAndEditsHabit() {
         let newForm = HabitFormViewModel(habit: nil, nextSortOrder: 3)
         newForm.title = " 朝の読書 "
-        newForm.category = "学習"
+        newForm.detail = "学習"
         newForm.activeDays = [2, 4, 6]
 
         let habit = newForm.save()
         #expect(habit?.title == "朝の読書")
+        #expect(habit?.detail == "学習")
         #expect(habit?.sortOrder == 3)
         #expect(habit?.activeDays == [2, 4, 6])
 
@@ -297,6 +298,42 @@ struct YasashiiTaskTests {
         #expect(try context.fetch(FetchDescriptor<CompletionRecord>()).isEmpty)
     }
 
+    @Test @MainActor func backupAddsRelatedDataWithNewIDsAndUniqueHabitTitle() throws {
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(
+            for: Habit.self,
+            TaskCard.self,
+            ChecklistItem.self,
+            CompletionRecord.self,
+            AppSettings.self,
+            configurations: configuration
+        )
+        let context = container.mainContext
+        context.insert(Habit(title: "散歩"))
+        try context.save()
+
+        let importedHabit = Habit(title: "散歩")
+        let importedCard = TaskCard(habit: importedHabit, title: "公園を歩く")
+        let importedItem = ChecklistItem(taskCard: importedCard, title: "水を持つ")
+        let importedRecord = CompletionRecord(habit: importedHabit, taskCard: importedCard, targetDate: .now, completedAt: .now, status: "completed")
+        let data = try BackupService.makeData(habits: [importedHabit], cards: [importedCard], checklistItems: [importedItem], completionRecords: [importedRecord], settings: [AppSettings()])
+
+        try BackupService.importAdding(data, using: context)
+
+        let habits = try context.fetch(FetchDescriptor<Habit>())
+        let cards = try context.fetch(FetchDescriptor<TaskCard>())
+        let items = try context.fetch(FetchDescriptor<ChecklistItem>())
+        let records = try context.fetch(FetchDescriptor<CompletionRecord>())
+        #expect(Set(habits.map(\.title)) == ["散歩", "散歩 2"])
+        #expect(habits.allSatisfy { $0.id != importedHabit.id })
+        #expect(cards.first?.id != importedCard.id)
+        #expect(cards.first?.habit?.title == "散歩 2")
+        #expect(items.first?.taskCard?.id == cards.first?.id)
+        #expect(records.first?.habit?.title == "散歩 2")
+        #expect(records.first?.taskCard?.id == cards.first?.id)
+        #expect(try context.fetch(FetchDescriptor<AppSettings>()).isEmpty)
+    }
+
     @Test @MainActor func settingsMapsThemesToColorSchemes() {
         let viewModel = SettingsViewModel()
 
@@ -315,7 +352,7 @@ struct YasashiiTaskTests {
         #expect(habitForm.save() == nil)
         #expect(habitForm.errorMessage == "習慣名は100文字以内で入力してください。")
         #expect(cardForm.save() == nil)
-        #expect(cardForm.errorMessage == "カード名は100文字以内で入力してください。")
+        #expect(cardForm.errorMessage == "タスク名は100文字以内で入力してください。")
     }
 
     @Test @MainActor func habitCalculatesPlannedDailyDuration() {

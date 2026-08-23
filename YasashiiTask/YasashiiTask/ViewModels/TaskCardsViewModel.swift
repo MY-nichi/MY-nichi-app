@@ -34,6 +34,7 @@ final class TaskCardsViewModel {
 
     func deletePendingCard(using modelContext: ModelContext) {
         guard let card = cardPendingDeletion else { return }
+        NotificationService.removeTaskReminder(for: card.id)
         modelContext.delete(card)
         cardPendingDeletion = nil
 

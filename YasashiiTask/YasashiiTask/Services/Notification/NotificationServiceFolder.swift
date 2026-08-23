@@ -3,7 +3,7 @@ import UserNotifications
 
 enum NotificationService {
     @MainActor
-    static func updateReminder(for card: TaskCard) async {
+    static func updateReminder(for card: TaskCard, hapticsEnabled: Bool = true) async {
         let cardID = card.id
         let title = card.title
         let detail = card.detail
@@ -24,7 +24,7 @@ enum NotificationService {
             let content = UNMutableNotificationContent()
             content.title = title
             content.body = detail.isEmpty ? "今日のタスクの時間です。" : detail
-            content.sound = .default
+            content.sound = hapticsEnabled ? .default : nil
 
             switch repeatRule {
             case "weekdays":
@@ -53,6 +53,55 @@ enum NotificationService {
             }
         } catch {
             // 通知が許可されなくても、カード自体の保存は成功させます。
+        }
+    }
+
+    @MainActor
+    static func updateReminder(for habit: Habit, hapticsEnabled: Bool = true) async {
+        let habitID = habit.id
+        let title = habit.title
+        let detail = habit.detail
+        let reminderTime = habit.reminderTime
+        let activeDays = habit.activeDays
+        let center = UNUserNotificationCenter.current()
+        let prefix = "habit-\(habitID.uuidString)-"
+        let pending = await center.pendingNotificationRequests()
+        let identifiers = pending.map(\.identifier).filter { $0.hasPrefix(prefix) }
+        center.removePendingNotificationRequests(withIdentifiers: identifiers)
+
+        guard habit.isActive, !habit.isArchived, let reminderTime else { return }
+        do {
+            guard try await center.requestAuthorization(options: [.alert, .sound, .badge]) else { return }
+            let calendar = Calendar.current
+            let time = calendar.dateComponents([.hour, .minute], from: reminderTime)
+            let content = UNMutableNotificationContent()
+            content.title = title
+            content.body = detail.isEmpty ? "習慣の時間です。" : detail
+            content.sound = hapticsEnabled ? .default : nil
+
+            if activeDays.isEmpty {
+                try await addRequest(prefix + "daily", components: time, repeats: true, content: content, center: center)
+            } else {
+                try await addWeeklyRequests(activeDays, time: time, prefix: prefix, content: content, center: center)
+            }
+        } catch {
+            // 通知が許可されなくても、習慣自体の保存は成功させます。
+        }
+    }
+
+    static func removeTaskReminder(for cardID: UUID) {
+        removeRequests(prefix: "task-card-\(cardID.uuidString)-")
+    }
+
+    static func removeHabitReminder(for habitID: UUID) {
+        removeRequests(prefix: "habit-\(habitID.uuidString)-")
+    }
+
+    private static func removeRequests(prefix: String) {
+        let center = UNUserNotificationCenter.current()
+        center.getPendingNotificationRequests { requests in
+            let identifiers = requests.map(\.identifier).filter { $0.hasPrefix(prefix) }
+            center.removePendingNotificationRequests(withIdentifiers: identifiers)
         }
     }
 

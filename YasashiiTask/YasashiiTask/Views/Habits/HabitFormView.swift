@@ -5,8 +5,10 @@ import UIKit
 struct HabitFormView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Query private var settings: [AppSettings]
     @State private var viewModel: HabitFormViewModel
     @State private var isCustomIconInputVisible = false
+    @State private var isDeletionConfirmationPresented = false
     @FocusState private var isCustomIconFieldFocused: Bool
 
     private let icons = ["checkmark.circle", "leaf", "figure.walk", "book", "pencil", "music.note", "heart", "cup.and.saucer", "sparkles"]
@@ -22,9 +24,7 @@ struct HabitFormView: View {
             Form {
                 Section("基本情報") {
                     TextField("習慣名（必須）", text: $viewModel.title)
-                    TextField("説明", text: $viewModel.detail, axis: .vertical)
-                        .lineLimit(2...5)
-                    TextField("カテゴリ", text: $viewModel.category)
+                    TextField("説明", text: $viewModel.detail)
                 }
 
                 Section {
@@ -46,11 +46,13 @@ struct HabitFormView: View {
                                 Text("アイコン")
                                 Spacer()
                                 Label(selectedIconDisplayName, systemImage: viewModel.iconName)
+                                    .frame(minWidth: 96, alignment: .trailing)
                             }
                             .foregroundStyle(Color.emerald)
                             .frame(minHeight: 44)
                             .contentShape(Rectangle())
                         }
+                        .transaction { $0.animation = nil }
 
                         if viewModel.iconName == "sparkles", isCustomIconInputVisible {
                             Divider()
@@ -91,6 +93,7 @@ struct HabitFormView: View {
                                     .frame(width: 16, height: 16)
                                     .overlay(Circle().stroke(.secondary.opacity(0.35), lineWidth: 1))
                                 Text(colorDisplayName(viewModel.colorHex))
+                                    .frame(minWidth: 70, alignment: .trailing)
                                 Image(systemName: "chevron.up.chevron.down")
                                     .font(.caption)
                             }
@@ -98,6 +101,7 @@ struct HabitFormView: View {
                             .frame(minHeight: 44)
                             .contentShape(Rectangle())
                         }
+                        .transaction { $0.animation = nil }
                     }
                     .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
                 }
@@ -134,12 +138,6 @@ struct HabitFormView: View {
                         JapaneseDatePickerRow(title: "終了日の日付", selection: $viewModel.endDate)
                     }
                     Stepper("1日の目標：\(viewModel.targetCount)回", value: $viewModel.targetCount, in: 1...99)
-                    Toggle("実施時間設定", isOn: $viewModel.hasDailyTime)
-                    if viewModel.hasDailyTime {
-                        DatePicker("開始時間", selection: $viewModel.dailyStartTime, displayedComponents: .hourAndMinute)
-                        DatePicker("終了時間", selection: $viewModel.dailyEndTime, displayedComponents: .hourAndMinute)
-                        LabeledContent("予定時間", value: durationText)
-                    }
                     Toggle("目標時間設定", isOn: $viewModel.hasTargetMinutes)
                     if viewModel.hasTargetMinutes {
                         Stepper("1日の目標：\(viewModel.targetMinutes)分", value: $viewModel.targetMinutes, in: 1...1440, step: 5)
@@ -149,6 +147,21 @@ struct HabitFormView: View {
                         Stepper("目標：\(viewModel.targetDays)日", value: $viewModel.targetDays, in: 1...3650)
                     }
                     Toggle("習慣を有効", isOn: $viewModel.isActive)
+                }
+
+                Section("リマインダー") {
+                    Toggle("リマインダー", isOn: $viewModel.hasReminder)
+                    if viewModel.hasReminder {
+                        DatePicker("通知時刻", selection: $viewModel.reminderTime, displayedComponents: .hourAndMinute)
+                    }
+                }
+
+                if viewModel.habit != nil {
+                    Section {
+                        Button("この習慣を削除", systemImage: "trash", role: .destructive) {
+                            isDeletionConfirmationPresented = true
+                        }
+                    }
                 }
             }
             .navigationTitle(viewModel.navigationTitle)
@@ -167,6 +180,12 @@ struct HabitFormView: View {
             } message: {
                 Text(viewModel.errorMessage ?? "不明なエラーです。")
             }
+            .confirmationDialog("習慣を削除しますか？", isPresented: $isDeletionConfirmationPresented, titleVisibility: .visible) {
+                Button("削除する", role: .destructive) { deleteHabit() }
+                Button("キャンセル", role: .cancel) {}
+            } message: {
+                Text("関連するデータも削除されます。この操作は元に戻せません。")
+            }
         }
     }
 
@@ -184,6 +203,7 @@ struct HabitFormView: View {
         }
         do {
             try modelContext.save()
+            Task { await NotificationService.updateReminder(for: habit, hapticsEnabled: hapticsEnabled) }
             dismiss()
         } catch {
             modelContext.rollback()
@@ -191,17 +211,25 @@ struct HabitFormView: View {
         }
     }
 
-    private var durationText: String {
-        let start = Calendar.current.dateComponents([.hour, .minute], from: viewModel.dailyStartTime)
-        let end = Calendar.current.dateComponents([.hour, .minute], from: viewModel.dailyEndTime)
-        let startMinutes = (start.hour ?? 0) * 60 + (start.minute ?? 0)
-        let endMinutes = (end.hour ?? 0) * 60 + (end.minute ?? 0)
-        let minutes = (endMinutes - startMinutes + 1440) % 1440
-        return minutes >= 60 ? "\(minutes / 60)時間\(minutes % 60 == 0 ? "" : "\(minutes % 60)分")" : "\(minutes)分"
+    private func deleteHabit() {
+        guard let habit = viewModel.habit else { return }
+        NotificationService.removeHabitReminder(for: habit.id)
+        modelContext.delete(habit)
+        do {
+            try modelContext.save()
+            dismiss()
+        } catch {
+            modelContext.rollback()
+            viewModel.errorMessage = "習慣を削除できませんでした。もう一度お試しください。"
+        }
     }
 
     private func iconDisplayName(_ icon: String) -> String {
         ["checkmark.circle": "チェック", "leaf": "葉", "figure.walk": "運動", "book": "読書", "pencil": "学習", "music.note": "音楽", "heart": "健康", "cup.and.saucer": "休憩", "sparkles": "その他"][icon] ?? "アイコン"
+    }
+
+    private var hapticsEnabled: Bool {
+        settings.first?.hapticsEnabled ?? true
     }
 
     private var selectedIconDisplayName: String {
