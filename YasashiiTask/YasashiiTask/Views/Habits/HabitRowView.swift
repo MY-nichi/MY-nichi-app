@@ -7,10 +7,12 @@ struct HabitRowView: View {
     var isCompleted: Bool?
     var showsExecutionTime = false
     var showsSchedule = false
+    var achievementMemo = ""
+    var streakCount: Int? = nil
 
     private var habitColor: Color {
         let hex = habit.colorHex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        guard hex.count == 6, let value = Int(hex, radix: 16) else { return Color(red: 0.00, green: 0.45, blue: 0.30) }
+        guard hex.count == 6, let value = Int(hex, radix: 16) else { return AppTheme.tint }
         return Color(
             red: Double((value >> 16) & 0xFF) / 255,
             green: Double((value >> 8) & 0xFF) / 255,
@@ -81,13 +83,27 @@ struct HabitRowView: View {
                         .foregroundStyle(.secondary)
                 }
 
+                if let streakCount {
+                    Label("継続\(streakCount)日", systemImage: "flame")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(habitColor)
+                }
+
+                if !achievementMemo.isEmpty {
+                    Text(achievementMemo)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
             }
 
             Spacer(minLength: 8)
 
         }
         .padding(16)
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(AppTheme.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 18))
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)

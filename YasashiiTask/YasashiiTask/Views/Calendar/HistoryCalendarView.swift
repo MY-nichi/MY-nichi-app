@@ -12,7 +12,7 @@ struct HistoryCalendarView: View {
     @State private var errorMessage: String?
 
     private let calendar = Calendar.current
-    private let emerald = Color(red: 0.06, green: 0.58, blue: 0.42)
+    private let emerald = AppTheme.tint
     private let weekdays = ["日", "月", "火", "水", "木", "金", "土"]
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 5), count: 7)
 
@@ -41,6 +41,9 @@ struct HistoryCalendarView: View {
     private var selectedTasks: [TaskCard] {
         cards
             .filter { card in
+                if card.repeatRule != nil {
+                    return card.isScheduled(on: viewModel.selectedDate, calendar: calendar)
+                }
                 guard let dueDate = card.dueDate else { return false }
                 return calendar.isDate(dueDate, inSameDayAs: viewModel.selectedDate)
             }
@@ -62,23 +65,25 @@ struct HistoryCalendarView: View {
                 }
                 .padding(16)
             }
-            .background(Color(.systemGroupedBackground))
+            .background(AppTheme.screenBackground)
             .navigationTitle("カレンダー")
         }
         .sheet(item: $selectedHabit) { habit in
             AchievementPickerSheet(
                 cardTitle: habit.title,
-                selectedAchievement: achievement(for: habit)
-            ) { achievement in
-                setAchievement(achievement, for: habit)
+                selectedAchievement: achievement(for: habit),
+                memo: record(for: habit)?.memo ?? ""
+            ) { achievement, memo in
+                setAchievement(achievement, memo: memo, for: habit)
             }
         }
         .sheet(item: $selectedCard) { card in
             AchievementPickerSheet(
                 cardTitle: card.title,
-                selectedAchievement: achievement(for: card)
-            ) { achievement in
-                setAchievement(achievement, for: card)
+                selectedAchievement: achievement(for: card),
+                memo: record(for: card)?.memo ?? ""
+            ) { achievement, memo in
+                setAchievement(achievement, memo: memo, for: card)
             }
         }
         .alert("保存できませんでした", isPresented: Binding(
@@ -135,7 +140,7 @@ struct HistoryCalendarView: View {
             }
         }
         .padding(14)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 20))
+        .background(AppTheme.cardBackground, in: RoundedRectangle(cornerRadius: 20))
     }
 
     private func dayButton(_ date: Date) -> some View {
@@ -202,7 +207,8 @@ struct HistoryCalendarView: View {
                             achievement: achievement,
                             showsActiveStatus: false,
                             isCompleted: achievement != nil,
-                            showsExecutionTime: true
+                            showsExecutionTime: true,
+                            achievementMemo: record(for: habit)?.memo ?? ""
                         )
                     }
                     .buttonStyle(.plain)
@@ -225,7 +231,8 @@ struct HistoryCalendarView: View {
                         showsDueDate: false,
                         showsExecutionTime: true,
                         strikesThroughCompletedTitle: false,
-                        usesSimpleCompletionStatus: true
+                        usesSimpleCompletionStatus: true,
+                        achievementMemo: record(for: card)?.memo ?? ""
                     ) {
                         selectedCard = card
                     }
@@ -243,36 +250,41 @@ struct HistoryCalendarView: View {
         record(for: card)?.achievement
     }
 
-    private func setAchievement(_ achievement: TaskAchievement?, for habit: Habit) {
+    private func setAchievement(_ achievement: TaskAchievement?, memo: String, for habit: Habit) {
         if let record = record(for: habit) {
             record.achievement = achievement
-            record.completedAt = achievement == nil ? nil : viewModel.selectedDate
+            record.completedAt = achievement?.countsAsCompletion == true ? viewModel.selectedDate : nil
+            record.memo = achievement == nil ? "" : memo
         } else if let achievement {
             modelContext.insert(CompletionRecord(
                 habit: habit,
                 targetDate: calendar.startOfDay(for: viewModel.selectedDate),
-                completedAt: viewModel.selectedDate,
-                status: achievement.rawValue
+                completedAt: achievement.countsAsCompletion ? viewModel.selectedDate : nil,
+                status: achievement.rawValue,
+                memo: memo
             ))
         }
         saveAchievement()
     }
 
-    private func setAchievement(_ achievement: TaskAchievement?, for card: TaskCard) {
+    private func setAchievement(_ achievement: TaskAchievement?, memo: String, for card: TaskCard) {
         if let record = record(for: card) {
             record.achievement = achievement
-            record.completedAt = achievement == nil ? nil : viewModel.selectedDate
+            record.completedAt = achievement?.countsAsCompletion == true ? viewModel.selectedDate : nil
+            record.memo = achievement == nil ? "" : memo
         } else if let achievement {
             modelContext.insert(CompletionRecord(
                 habit: card.habit,
                 taskCard: card,
                 targetDate: calendar.startOfDay(for: viewModel.selectedDate),
-                completedAt: viewModel.selectedDate,
-                status: achievement.rawValue
+                completedAt: achievement.countsAsCompletion ? viewModel.selectedDate : nil,
+                status: achievement.rawValue,
+                memo: memo
             ))
         }
-        card.isCompleted = achievement != nil
-        card.completedAt = achievement == nil ? nil : viewModel.selectedDate
+        let storesGlobalCompletion = card.repeatRule == nil
+        card.isCompleted = storesGlobalCompletion && (achievement?.countsAsCompletion ?? false)
+        card.completedAt = card.isCompleted ? viewModel.selectedDate : nil
         card.updatedAt = .now
         saveAchievement()
     }

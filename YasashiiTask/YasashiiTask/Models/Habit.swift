@@ -3,7 +3,7 @@ import SwiftData
 
 @Model
 final class Habit {
-    @Attribute(.unique) var id: UUID
+    var id: UUID
     var title: String
     var detail: String
     var category: String

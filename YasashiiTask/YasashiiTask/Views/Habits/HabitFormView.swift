@@ -48,7 +48,7 @@ struct HabitFormView: View {
                                 Label(selectedIconDisplayName, systemImage: viewModel.iconName)
                                     .frame(minWidth: 96, alignment: .trailing)
                             }
-                            .foregroundStyle(Color.emerald)
+                            .foregroundStyle(AppTheme.tint)
                             .frame(minHeight: 44)
                             .contentShape(Rectangle())
                         }
@@ -97,7 +97,7 @@ struct HabitFormView: View {
                                 Image(systemName: "chevron.up.chevron.down")
                                     .font(.caption)
                             }
-                            .foregroundStyle(Color.emerald)
+                            .foregroundStyle(AppTheme.tint)
                             .frame(minHeight: 44)
                             .contentShape(Rectangle())
                         }
@@ -116,7 +116,7 @@ struct HabitFormView: View {
                                     .font(.subheadline.weight(.semibold))
                                     .frame(maxWidth: .infinity, minHeight: 38)
                                     .background(
-                                        viewModel.activeDays.contains(weekday) ? Color.emerald : Color(.tertiarySystemFill),
+                                        viewModel.activeDays.contains(weekday) ? AppTheme.tint : AppTheme.chipBackground,
                                         in: Circle()
                                     )
                                     .foregroundStyle(viewModel.activeDays.contains(weekday) ? .white : .primary)
@@ -164,6 +164,8 @@ struct HabitFormView: View {
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(AppTheme.screenBackground)
             .navigationTitle(viewModel.navigationTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -301,7 +303,7 @@ private struct JapaneseDatePickerRow: View {
 }
 
 private extension Color {
-    static let emerald = Color(red: 0.06, green: 0.58, blue: 0.42)
+    static let emerald = AppTheme.tint
 }
 
 #Preview {

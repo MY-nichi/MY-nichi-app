@@ -3,7 +3,7 @@ import SwiftUI
 struct TimelineCardRow: View {
     let card: TaskCard
 
-    private let emerald = Color(red: 0.06, green: 0.58, blue: 0.42)
+    private let emerald = AppTheme.tint
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {

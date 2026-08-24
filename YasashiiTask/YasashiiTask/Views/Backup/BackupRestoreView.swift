@@ -44,10 +44,12 @@ struct BackupRestoreView: View {
             if let message {
                 Section {
                     Label(message, systemImage: "checkmark.circle.fill")
-                        .foregroundStyle(Color(red: 0.06, green: 0.58, blue: 0.42))
+                        .foregroundStyle(AppTheme.tint)
                 }
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(AppTheme.screenBackground)
         .navigationTitle("バックアップ・復元")
         .navigationBarTitleDisplayMode(.inline)
         .fileExporter(isPresented: $isExporting, document: exportDocument, contentType: .json, defaultFilename: "yasashii-task-backup") { result in

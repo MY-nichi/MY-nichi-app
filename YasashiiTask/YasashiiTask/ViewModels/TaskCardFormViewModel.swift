@@ -27,6 +27,7 @@ final class TaskCardFormViewModel {
     var iconName: String
     var colorHex: String
     var repeatRule: String
+    var repeatWeekdays: Set<Int>
     var hasReminder: Bool
     var reminderTime: Date
     var tagsText: String
@@ -53,7 +54,9 @@ final class TaskCardFormViewModel {
         self.priority = card?.priority ?? "normal"
         self.iconName = card?.iconName ?? "rectangle.stack"
         self.colorHex = card?.colorHex ?? habit?.colorHex ?? "#10B981"
-        self.repeatRule = card?.repeatRule ?? "none"
+        let storedRepeatRule = card?.repeatRule ?? "none"
+        self.repeatRule = ["none", "weekly", "biweekly", "monthly"].contains(storedRepeatRule) ? storedRepeatRule : "none"
+        self.repeatWeekdays = Set(card?.repeatWeekdays ?? [])
         self.hasReminder = card?.reminderTime != nil
         self.reminderTime = card?.reminderTime ?? .now
         self.tagsText = card?.tags.joined(separator: "、") ?? ""
@@ -84,6 +87,10 @@ final class TaskCardFormViewModel {
             errorMessage = "タスク名は100文字以内で入力してください。"
             return nil
         }
+        guard !requiresRepeatDetails || !repeatWeekdays.isEmpty else {
+            errorMessage = "曜日を1つ以上選択してください。"
+            return nil
+        }
         let target = card ?? TaskCard(habit: habit, title: cleanedTitle, sortOrder: nextSortOrder)
         target.habit = habit
         target.title = cleanedTitle
@@ -96,11 +103,24 @@ final class TaskCardFormViewModel {
         target.iconName = iconName
         target.colorHex = colorHex
         target.repeatRule = repeatRule == "none" ? nil : repeatRule
-        target.reminderTime = hasReminder ? reminderTime : nil
+        target.repeatWeekdays = requiresRepeatDetails ? repeatWeekdays.sorted() : []
+        target.reminderTime = requiresRepeatDetails || hasReminder ? reminderTime : nil
         target.tags = parsedTags
         target.updatedAt = .now
         updateChecklist(for: target)
         return target
+    }
+
+    func toggleRepeatWeekday(_ weekday: Int) {
+        if repeatWeekdays.contains(weekday) {
+            repeatWeekdays.remove(weekday)
+        } else {
+            repeatWeekdays.insert(weekday)
+        }
+    }
+
+    var requiresRepeatDetails: Bool {
+        repeatRule == "weekly" || repeatRule == "biweekly" || repeatRule == "monthly"
     }
 
     private var parsedTags: [String] {

@@ -75,9 +75,11 @@ private struct SettingsForm: View {
             Section("アプリ情報") {
                 LabeledContent("アプリ名", value: "MY-nichi")
                 LabeledContent("データ保存", value: "この端末内")
-                LabeledContent("バージョン", value: "MVP開発中")
+                LabeledContent("バージョン", value: "1.0.0")
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(AppTheme.screenBackground)
     }
 
     private var displayNameBinding: Binding<String> {

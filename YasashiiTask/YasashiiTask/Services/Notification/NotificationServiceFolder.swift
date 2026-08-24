@@ -9,6 +9,7 @@ enum NotificationService {
         let detail = card.detail
         let reminderTime = card.reminderTime
         let repeatRule = card.repeatRule
+        let repeatWeekdays = card.repeatWeekdays
         let referenceDate = card.dueDate ?? card.createdAt
         let center = UNUserNotificationCenter.current()
         let prefix = "task-card-\(cardID.uuidString)-"
@@ -27,17 +28,33 @@ enum NotificationService {
             content.sound = hapticsEnabled ? .default : nil
 
             switch repeatRule {
+            case "weekdaySelection":
+                try await addWeeklyRequests(repeatWeekdays, time: time, prefix: prefix, content: content, center: center)
             case "weekdays":
                 try await addWeeklyRequests([2, 3, 4, 5, 6], time: time, prefix: prefix, content: content, center: center)
             case "weekends":
                 try await addWeeklyRequests([1, 7], time: time, prefix: prefix, content: content, center: center)
             case "weekly":
-                let weekday = calendar.component(.weekday, from: referenceDate)
-                try await addWeeklyRequests([weekday], time: time, prefix: prefix, content: content, center: center)
+                let weekdays = repeatWeekdays.isEmpty ? [calendar.component(.weekday, from: referenceDate)] : repeatWeekdays
+                try await addWeeklyRequests(weekdays, time: time, prefix: prefix, content: content, center: center)
+            case "biweekly":
+                let weekdays = repeatWeekdays.isEmpty ? [calendar.component(.weekday, from: referenceDate)] : repeatWeekdays
+                for weekday in weekdays {
+                    var fireDate = nextBiweeklyDate(from: referenceDate, weekday: weekday, time: time, calendar: calendar)
+                    if fireDate <= .now {
+                        fireDate = calendar.date(byAdding: .day, value: 14, to: fireDate) ?? fireDate
+                    }
+                    let components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: fireDate)
+                    try await addRequest(prefix + "biweekly-\(weekday)", components: components, repeats: false, content: content, center: center)
+                }
             case "monthly":
-                var components = time
-                components.day = calendar.component(.day, from: referenceDate)
-                try await addRequest(prefix + "monthly", components: components, repeats: true, content: content, center: center)
+                let weekdays = repeatWeekdays.isEmpty ? [calendar.component(.weekday, from: referenceDate)] : repeatWeekdays
+                for weekday in weekdays {
+                    var components = time
+                    components.weekday = weekday
+                    components.weekOfMonth = calendar.component(.weekOfMonth, from: referenceDate)
+                    try await addRequest(prefix + "monthly-\(weekday)", components: components, repeats: true, content: content, center: center)
+                }
             case "daily":
                 try await addRequest(prefix + "daily", components: time, repeats: true, content: content, center: center)
             default:
@@ -128,5 +145,27 @@ enum NotificationService {
     ) async throws {
         let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: repeats)
         try await center.add(UNNotificationRequest(identifier: identifier, content: content, trigger: trigger))
+    }
+
+    private static func nextBiweeklyDate(
+        from referenceDate: Date,
+        weekday: Int,
+        time: DateComponents,
+        calendar: Calendar
+    ) -> Date {
+        var candidate = calendar.startOfDay(for: referenceDate)
+        while true {
+            if calendar.component(.weekday, from: candidate) == weekday,
+               let dayDifference = calendar.dateComponents([.day], from: calendar.startOfDay(for: referenceDate), to: candidate).day,
+               dayDifference >= 0,
+               (dayDifference / 7).isMultiple(of: 2) {
+                var components = calendar.dateComponents([.year, .month, .day], from: candidate)
+                components.hour = time.hour
+                components.minute = time.minute
+                let fireDate = calendar.date(from: components) ?? candidate
+                if fireDate > .now { return fireDate }
+            }
+            candidate = calendar.date(byAdding: .day, value: 1, to: candidate) ?? candidate
+        }
     }
 }

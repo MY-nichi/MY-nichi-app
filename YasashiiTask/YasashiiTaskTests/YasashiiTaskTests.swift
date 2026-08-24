@@ -186,6 +186,13 @@ struct YasashiiTaskTests {
         #expect(card.completionRecords.first?.status == TaskAchievement.excellent.rawValue)
         #expect(viewModel.achievement(for: card, date: date) == .excellent)
 
+        viewModel.setAchievement(.rest, of: card, using: context, date: date, memo: "今日は休む")
+        #expect(card.isCompleted == false)
+        #expect(card.completedAt == nil)
+        #expect(card.completionRecords.first?.status == TaskAchievement.rest.rawValue)
+        #expect(card.completionRecords.first?.memo == "今日は休む")
+        #expect(viewModel.summary(for: [card], date: date).total == 0)
+
         card.completionRecords.first?.status = "completed"
         #expect(viewModel.achievement(for: card, date: date) == .achieved)
         #expect(card.completionRecords.first?.isCompletedStatus == true)
@@ -370,11 +377,68 @@ struct YasashiiTaskTests {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(secondsFromGMT: 0)!
         let monday = calendar.date(from: DateComponents(year: 2026, month: 7, day: 20))!
+        let wednesday = calendar.date(from: DateComponents(year: 2026, month: 7, day: 22))!
         let sunday = calendar.date(from: DateComponents(year: 2026, month: 7, day: 19))!
-        let weekdayCard = TaskCard(title: "平日の練習", repeatRule: "weekdays")
+        let weekdayCard = TaskCard(title: "曜日指定の練習", repeatRule: "weekdaySelection", repeatWeekdays: [2, 4])
 
         #expect(weekdayCard.isScheduled(on: monday, calendar: calendar))
+        #expect(weekdayCard.isScheduled(on: wednesday, calendar: calendar))
         #expect(!weekdayCard.isScheduled(on: sunday, calendar: calendar))
+    }
+
+    @Test @MainActor func taskWeeklyRepeatsOnMultipleSelectedWeekdays() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let monday = calendar.date(from: DateComponents(year: 2026, month: 7, day: 20))!
+        let wednesday = calendar.date(from: DateComponents(year: 2026, month: 7, day: 22))!
+        let friday = calendar.date(from: DateComponents(year: 2026, month: 7, day: 24))!
+        let card = TaskCard(title: "週の練習", dueDate: monday, repeatRule: "weekly", repeatWeekdays: [2, 4])
+
+        #expect(card.isScheduled(on: monday, calendar: calendar))
+        #expect(card.isScheduled(on: wednesday, calendar: calendar))
+        #expect(!card.isScheduled(on: friday, calendar: calendar))
+    }
+
+    @Test @MainActor func recurringTaskCompletionIsRecordedByDate() throws {
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(
+            for: Habit.self,
+            TaskCard.self,
+            ChecklistItem.self,
+            CompletionRecord.self,
+            AppSettings.self,
+            configurations: configuration
+        )
+        let context = container.mainContext
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let monday = calendar.date(from: DateComponents(year: 2026, month: 7, day: 20))!
+        let tuesday = calendar.date(from: DateComponents(year: 2026, month: 7, day: 21))!
+        let card = TaskCard(title: "毎日の練習", repeatRule: "daily")
+        let viewModel = TodayViewModel()
+
+        viewModel.setAchievement(.achieved, of: card, using: context, date: monday, calendar: calendar)
+
+        #expect(card.isCompleted == false)
+        #expect(viewModel.achievement(for: card, date: monday, calendar: calendar) == .achieved)
+        #expect(viewModel.achievement(for: card, date: tuesday, calendar: calendar) == nil)
+        #expect(viewModel.independentCardsForToday(from: [card], date: tuesday, calendar: calendar).map(\.title) == ["毎日の練習"])
+    }
+
+    @Test @MainActor func habitStreakIgnoresRestDays() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let monday = calendar.date(from: DateComponents(year: 2026, month: 7, day: 20))!
+        let tuesday = calendar.date(from: DateComponents(year: 2026, month: 7, day: 21))!
+        let wednesday = calendar.date(from: DateComponents(year: 2026, month: 7, day: 22))!
+        let habit = Habit(title: "散歩", startDate: monday)
+        habit.completionRecords = [
+            CompletionRecord(habit: habit, targetDate: monday, completedAt: monday, status: TaskAchievement.achieved.rawValue),
+            CompletionRecord(habit: habit, targetDate: tuesday, status: TaskAchievement.rest.rawValue),
+            CompletionRecord(habit: habit, targetDate: wednesday, completedAt: wednesday, status: TaskAchievement.excellent.rawValue),
+        ]
+
+        #expect(HabitsViewModel().streakCount(for: habit, date: wednesday, calendar: calendar) == 2)
     }
 
 }

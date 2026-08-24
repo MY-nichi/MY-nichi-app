@@ -3,7 +3,7 @@ import SwiftData
 
 @Model
 final class CompletionRecord {
-    @Attribute(.unique) var id: UUID
+    var id: UUID
     var targetDate: Date
     var completedAt: Date?
     var status: String

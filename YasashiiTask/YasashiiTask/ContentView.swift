@@ -9,7 +9,9 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
-    @Query private var settings: [AppSettings]
+    @Query private var habits: [Habit]
+    @Query private var cards: [TaskCard]
+    @State private var widgetViewModel = TodayViewModel()
     let startupWarning: String?
 
     init(startupWarning: String? = nil) {
@@ -43,8 +45,11 @@ struct ContentView: View {
                     Label("設定", systemImage: "gearshape")
                 }
         }
-        .tint(Color(red: 0.00, green: 0.45, blue: 0.30))
-        .preferredColorScheme(preferredColorScheme)
+        .tint(AppTheme.tint)
+        .preferredColorScheme(.light)
+        .onAppear(perform: updateWidgetSnapshot)
+        .onChange(of: habits.map(\.updatedAt)) { _, _ in updateWidgetSnapshot() }
+        .onChange(of: cards.map(\.updatedAt)) { _, _ in updateWidgetSnapshot() }
         .safeAreaInset(edge: .top) {
             if let startupWarning {
                 Label(startupWarning, systemImage: "exclamationmark.triangle.fill")
@@ -58,12 +63,11 @@ struct ContentView: View {
         }
     }
 
-    private var preferredColorScheme: ColorScheme? {
-        switch settings.first?.theme {
-        case "light": .light
-        case "dark": .dark
-        default: nil
-        }
+    private func updateWidgetSnapshot() {
+        WidgetSnapshotService.save(
+            habits: widgetViewModel.habitsForToday(from: habits),
+            cards: widgetViewModel.independentCardsForToday(from: cards)
+        )
     }
 }
 

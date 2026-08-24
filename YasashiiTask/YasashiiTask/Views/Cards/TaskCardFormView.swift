@@ -11,6 +11,7 @@ struct TaskCardFormView: View {
 
     private let icons = ["rectangle.stack", "checkmark.square", "book", "pencil", "figure.walk", "music.note", "heart", "briefcase"]
     private let colors = ["#10B981", "#60A5FA", "#06B6D4", "#84CC16", "#FBBF24", "#F97316", "#EF4444", "#F472B6", "#A78BFA", "#64748B"]
+    private let weekdays = [(1, "日"), (2, "月"), (3, "火"), (4, "水"), (5, "木"), (6, "金"), (7, "土")]
 
     init(habit: Habit? = nil, card: TaskCard?, nextSortOrder: Int) {
         _viewModel = State(initialValue: TaskCardFormViewModel(habit: habit, card: card, nextSortOrder: nextSortOrder))
@@ -32,9 +33,45 @@ struct TaskCardFormView: View {
                         DatePicker("期限", selection: $viewModel.dueDate, displayedComponents: .date)
                             .environment(\.locale, Locale(identifier: "ja_JP"))
                     }
-                    Toggle("リマインダー", isOn: $viewModel.hasReminder)
-                        .controlSize(.small)
-                    if viewModel.hasReminder {
+                    if !viewModel.requiresRepeatDetails {
+                        Toggle("リマインダー", isOn: $viewModel.hasReminder)
+                            .controlSize(.small)
+                        if viewModel.hasReminder {
+                            DatePicker("通知時刻", selection: $viewModel.reminderTime, displayedComponents: .hourAndMinute)
+                        }
+                    }
+                }
+
+                Section("繰り返し") {
+                    Picker("繰り返し", selection: $viewModel.repeatRule) {
+                        Text("なし").tag("none")
+                        Text("毎週").tag("weekly")
+                        Text("隔週").tag("biweekly")
+                        Text("毎月").tag("monthly")
+                    }
+
+                    if viewModel.requiresRepeatDetails {
+                        HStack(spacing: 8) {
+                            ForEach(weekdays, id: \.0) { weekday, label in
+                                Button {
+                                    viewModel.toggleRepeatWeekday(weekday)
+                                } label: {
+                                    Text(label)
+                                        .font(.caption.weight(.semibold))
+                                        .frame(width: 34, height: 34)
+                                        .foregroundStyle(viewModel.repeatWeekdays.contains(weekday) ? .white : .primary)
+                                        .background(
+                                            viewModel.repeatWeekdays.contains(weekday)
+                                                ? AppTheme.tint
+                                                : AppTheme.chipBackground,
+                                            in: Circle()
+                                        )
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.vertical, 4)
+
                         DatePicker("通知時刻", selection: $viewModel.reminderTime, displayedComponents: .hourAndMinute)
                     }
                 }
@@ -120,7 +157,7 @@ struct TaskCardFormView: View {
             .scrollContentBackground(.hidden)
             .background(
                 LinearGradient(
-                    colors: [.white, Color(red: 0.92, green: 0.99, blue: 0.97)],
+                    colors: [.white, AppTheme.screenBackground],
                     startPoint: .top,
                     endPoint: .bottom
                 )

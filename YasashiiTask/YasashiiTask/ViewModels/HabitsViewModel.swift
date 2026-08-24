@@ -23,6 +23,37 @@ final class HabitsViewModel {
         (habits.map(\.sortOrder).max() ?? -1) + 1
     }
 
+    func streakCount(for habit: Habit, date: Date = .now, calendar: Calendar = .current) -> Int {
+        var count = 0
+        var currentDate = calendar.startOfDay(for: date)
+        let startDate = calendar.startOfDay(for: habit.startDate)
+        let today = calendar.startOfDay(for: .now)
+
+        while currentDate >= startDate {
+            if isScheduled(habit, on: currentDate, calendar: calendar) {
+                if let achievement = achievement(for: habit, on: currentDate, calendar: calendar) {
+                    if achievement == .rest {
+                        currentDate = previousDay(before: currentDate, calendar: calendar)
+                        continue
+                    }
+                    if achievement.countsAsCompletion {
+                        count += 1
+                    } else {
+                        break
+                    }
+                } else if calendar.isDate(currentDate, inSameDayAs: today) {
+                    currentDate = previousDay(before: currentDate, calendar: calendar)
+                    continue
+                } else {
+                    break
+                }
+            }
+            currentDate = previousDay(before: currentDate, calendar: calendar)
+        }
+
+        return count
+    }
+
     func requestDeletion(of habit: Habit) {
         habitPendingDeletion = habit
     }
@@ -48,5 +79,23 @@ final class HabitsViewModel {
 
     func clearError() {
         errorMessage = nil
+    }
+
+    private func achievement(for habit: Habit, on date: Date, calendar: Calendar) -> TaskAchievement? {
+        habit.completionRecords.first {
+            $0.taskCard == nil && calendar.isDate($0.targetDate, inSameDayAs: date)
+        }?.achievement
+    }
+
+    private func isScheduled(_ habit: Habit, on date: Date, calendar: Calendar) -> Bool {
+        guard habit.isActive, !habit.isArchived else { return false }
+        guard date >= calendar.startOfDay(for: habit.startDate) else { return false }
+        if let endDate = habit.endDate, date > calendar.startOfDay(for: endDate) { return false }
+        let weekday = calendar.component(.weekday, from: date)
+        return habit.activeDays.isEmpty || habit.activeDays.contains(weekday)
+    }
+
+    private func previousDay(before date: Date, calendar: Calendar) -> Date {
+        calendar.date(byAdding: .day, value: -1, to: date) ?? date
     }
 }

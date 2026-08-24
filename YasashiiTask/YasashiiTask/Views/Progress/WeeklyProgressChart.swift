@@ -3,7 +3,7 @@ import SwiftUI
 struct WeeklyProgressChart: View {
     let values: [DailyCompletion]
 
-    private let emerald = Color(red: 0.06, green: 0.58, blue: 0.42)
+    private let emerald = AppTheme.tint
     private var maximum: Int { max(values.map(\.count).max() ?? 0, 1) }
 
     var body: some View {
@@ -14,7 +14,7 @@ struct WeeklyProgressChart: View {
                         .font(.caption2.monospacedDigit())
                         .foregroundStyle(.secondary)
                     RoundedRectangle(cornerRadius: 6)
-                        .fill(value.count == 0 ? Color(.tertiarySystemFill) : emerald)
+                        .fill(value.count == 0 ? AppTheme.chipBackground : emerald)
                         .frame(height: max(8, 82 * CGFloat(value.count) / CGFloat(maximum)))
                     Text(value.date.formatted(.dateTime.weekday(.narrow).locale(Locale(identifier: "ja_JP"))))
                         .font(.caption2)

@@ -8,11 +8,12 @@ struct TaskCardRowView: View {
     var showsSchedule = false
     var strikesThroughCompletedTitle = true
     var usesSimpleCompletionStatus = false
+    var achievementMemo = ""
     var onToggleCompletion: (() -> Void)?
 
     private var cardColor: Color {
         let hex = card.colorHex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        guard hex.count == 6, let value = Int(hex, radix: 16) else { return Color(red: 0.00, green: 0.45, blue: 0.30) }
+        guard hex.count == 6, let value = Int(hex, radix: 16) else { return AppTheme.tint }
         return Color(
             red: Double((value >> 16) & 0xFF) / 255,
             green: Double((value >> 8) & 0xFF) / 255,
@@ -28,7 +29,7 @@ struct TaskCardRowView: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(accessibilitySummary)
-                .accessibilityHint("もうちょっと、できた、よくできたから選びます")
+                .accessibilityHint("まあまあ、できた、よくできた、今日はお休みから選びます")
             } else {
                 rowContent
                     .accessibilityElement(children: .combine)
@@ -58,8 +59,8 @@ struct TaskCardRowView: View {
 
                 HStack(spacing: 10) {
                     Label(
-                        usesSimpleCompletionStatus ? (card.isCompleted ? "完了" : "未完了") : achievement?.title ?? (card.isCompleted ? "完了" : "未完了"),
-                        systemImage: card.isCompleted ? "checkmark.circle" : "circle"
+                        achievement?.title ?? (usesSimpleCompletionStatus ? (card.isCompleted ? "完了" : "未完了") : (card.isCompleted ? "完了" : "未完了")),
+                        systemImage: isCompletedStatus ? "checkmark.circle" : "circle"
                     )
                     if showsExecutionTime, let executionTime {
                         Label(executionTime, systemImage: "clock")
@@ -72,13 +73,21 @@ struct TaskCardRowView: View {
                     }
                 }
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(card.isCompleted ? .primary : cardColor)
+                .foregroundStyle(isCompletedStatus ? .primary : cardColor)
+
+                if !achievementMemo.isEmpty {
+                    Text(achievementMemo)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
 
             Spacer(minLength: 8)
         }
         .padding(16)
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(AppTheme.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 18))
         .contentShape(Rectangle())
     }
@@ -104,6 +113,10 @@ struct TaskCardRowView: View {
         return "\(card.title)\(detail)、\(status)"
     }
 
+    private var isCompletedStatus: Bool {
+        achievement?.countsAsCompletion ?? card.isCompleted
+    }
+
     private var executionTime: String? {
         card.reminderTime?.formatted(date: .omitted, time: .shortened)
     }
@@ -112,18 +125,12 @@ struct TaskCardRowView: View {
         guard let reminderTime = card.reminderTime else { return nil }
         let time = reminderTime.formatted(date: .omitted, time: .shortened)
         switch card.repeatRule {
-        case "daily":
-            return "毎日 \(time)"
-        case "weekdays":
-            return "平日 \(time)"
-        case "weekends":
-            return "週末 \(time)"
         case "weekly":
-            let weekday = weekdayText(from: card.dueDate ?? card.createdAt)
-            return "毎週\(weekday) \(time)"
+            return "毎週\(weekdaysText()) \(time)"
+        case "biweekly":
+            return "隔週\(weekdaysText()) \(time)"
         case "monthly":
-            let day = Calendar.current.component(.day, from: card.dueDate ?? card.createdAt)
-            return "毎月\(day)日 \(time)"
+            return "毎月\(weekdaysText()) \(time)"
         default:
             if let dueDate = card.dueDate {
                 return "\(weekdayText(from: dueDate)) \(time)"
@@ -134,6 +141,17 @@ struct TaskCardRowView: View {
 
     private func weekdayText(from date: Date) -> String {
         let weekday = Calendar.current.component(.weekday, from: date)
-        return [1: "日", 2: "月", 3: "火", 4: "水", 5: "木", 6: "金", 7: "土"][weekday] ?? ""
+        return weekdayName(weekday)
+    }
+
+    private func weekdaysText() -> String {
+        let weekdays = card.repeatWeekdays.isEmpty
+            ? [Calendar.current.component(.weekday, from: card.dueDate ?? card.createdAt)]
+            : card.repeatWeekdays.sorted()
+        return weekdays.map(weekdayName).joined(separator: "・")
+    }
+
+    private func weekdayName(_ weekday: Int) -> String {
+        [1: "日", 2: "月", 3: "火", 4: "水", 5: "木", 6: "金", 7: "土"][weekday] ?? ""
     }
 }

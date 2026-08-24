@@ -3,7 +3,7 @@ import SwiftUI
 struct TodaySummaryView: View {
     let summary: TodaySummary
 
-    private let emerald = Color(red: 0.00, green: 0.45, blue: 0.30)
+    private let emerald = AppTheme.tint
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -19,7 +19,7 @@ struct TodaySummaryView: View {
                 Spacer()
                 ZStack {
                     Circle()
-                        .stroke(Color(.tertiarySystemFill), lineWidth: 6)
+                        .stroke(AppTheme.chipBackground, lineWidth: 6)
                     Circle()
                         .trim(from: 0, to: Double(summary.achievementRate) / 100)
                         .stroke(emerald, style: StrokeStyle(lineWidth: 6, lineCap: .round))
@@ -40,7 +40,7 @@ struct TodaySummaryView: View {
             }
         }
         .padding(18)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 20))
+        .background(AppTheme.cardBackground, in: RoundedRectangle(cornerRadius: 20))
     }
 
     private func summaryItem(_ title: String, count: Int, icon: String) -> some View {

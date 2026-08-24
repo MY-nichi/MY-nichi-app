@@ -30,7 +30,7 @@ struct TaskCardListView: View {
                 .accessibilityHint("新しいタスクの入力画面を開きます")
             }
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.screenBackground)
         .sheet(isPresented: $isCreatingCard) {
             TaskCardFormView(
                 habit: habit,

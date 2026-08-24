@@ -27,7 +27,7 @@ struct ProgressDashboardView: View {
             }
             .padding(16)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(AppTheme.screenBackground)
         .navigationTitle("進捗・振り返り")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -35,10 +35,10 @@ struct ProgressDashboardView: View {
     private var encouragement: some View {
         Label("今日までの積み重ねを、ゆっくり振り返りましょう", systemImage: "leaf.fill")
             .font(.subheadline.weight(.semibold))
-            .foregroundStyle(Color(red: 0.06, green: 0.58, blue: 0.42))
+            .foregroundStyle(AppTheme.tint)
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color(red: 0.06, green: 0.58, blue: 0.42).opacity(0.1), in: RoundedRectangle(cornerRadius: 18))
+            .background(AppTheme.tint.opacity(0.1), in: RoundedRectangle(cornerRadius: 18))
     }
 
     private var summaryGrid: some View {
@@ -60,7 +60,7 @@ struct ProgressDashboardView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 18))
+        .background(AppTheme.cardBackground, in: RoundedRectangle(cornerRadius: 18))
         .accessibilityElement(children: .combine)
     }
 
@@ -70,7 +70,7 @@ struct ProgressDashboardView: View {
                 .font(.title2.bold())
             WeeklyProgressChart(values: snapshot.dailyCompletions)
                 .padding(16)
-                .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 18))
+                .background(AppTheme.cardBackground, in: RoundedRectangle(cornerRadius: 18))
         }
     }
 
@@ -97,9 +97,9 @@ struct ProgressDashboardView: View {
                                 Image(systemName: progress.habit.iconName)
                             }
                         }
-                            .foregroundStyle(Color(red: 0.06, green: 0.58, blue: 0.42))
+                            .foregroundStyle(AppTheme.tint)
                             .frame(width: 36, height: 36)
-                            .background(Color(red: 0.06, green: 0.58, blue: 0.42).opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
+                            .background(AppTheme.tint.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
                         Text(progress.habit.title)
                             .font(.headline)
                         Spacer()
@@ -108,7 +108,7 @@ struct ProgressDashboardView: View {
                             .foregroundStyle(.secondary)
                     }
                     .padding(14)
-                    .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
+                    .background(AppTheme.cardBackground, in: RoundedRectangle(cornerRadius: 16))
                     .accessibilityElement(children: .combine)
                 }
             }

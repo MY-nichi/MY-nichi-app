@@ -3,7 +3,7 @@ import SwiftData
 
 @Model
 final class TaskCard {
-    @Attribute(.unique) var id: UUID
+    var id: UUID
     var title: String
     var detail: String
     var memo: String
@@ -17,6 +17,7 @@ final class TaskCard {
     var isCompleted: Bool
     var completedAt: Date?
     var repeatRule: String?
+    var repeatWeekdays: [Int] = []
     var reminderTime: Date?
     var tags: [String]
     var createdAt: Date
@@ -45,6 +46,7 @@ final class TaskCard {
         isCompleted: Bool = false,
         completedAt: Date? = nil,
         repeatRule: String? = nil,
+        repeatWeekdays: [Int] = [],
         reminderTime: Date? = nil,
         tags: [String] = [],
         createdAt: Date = .now,
@@ -65,6 +67,7 @@ final class TaskCard {
         self.isCompleted = isCompleted
         self.completedAt = completedAt
         self.repeatRule = repeatRule
+        self.repeatWeekdays = repeatWeekdays
         self.reminderTime = reminderTime
         self.tags = tags
         self.createdAt = createdAt
@@ -76,18 +79,27 @@ final class TaskCard {
     func isScheduled(on date: Date, calendar: Calendar = .current) -> Bool {
         let referenceDate = dueDate ?? createdAt
         let weekday = calendar.component(.weekday, from: date)
+        let selectedWeekdays = repeatWeekdays.isEmpty ? [calendar.component(.weekday, from: referenceDate)] : repeatWeekdays
 
         switch repeatRule {
         case "daily":
             return true
+        case "weekdaySelection":
+            return repeatWeekdays.contains(weekday)
         case "weekdays":
             return (2...6).contains(weekday)
         case "weekends":
             return weekday == 1 || weekday == 7
         case "weekly":
-            return weekday == calendar.component(.weekday, from: referenceDate)
+            return selectedWeekdays.contains(weekday)
+        case "biweekly":
+            guard selectedWeekdays.contains(weekday),
+                  let dayDifference = calendar.dateComponents([.day], from: calendar.startOfDay(for: referenceDate), to: calendar.startOfDay(for: date)).day,
+                  dayDifference >= 0 else { return false }
+            return (dayDifference / 7).isMultiple(of: 2)
         case "monthly":
-            return calendar.component(.day, from: date) == calendar.component(.day, from: referenceDate)
+            return selectedWeekdays.contains(weekday) &&
+                calendar.component(.weekOfMonth, from: date) == calendar.component(.weekOfMonth, from: referenceDate)
         default:
             guard let dueDate else { return true }
             return calendar.isDate(dueDate, inSameDayAs: date)

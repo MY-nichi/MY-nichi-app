@@ -7,8 +7,8 @@ struct TodayView: View {
     @Query private var cards: [TaskCard]
     @Query private var settings: [AppSettings]
     @State private var viewModel = TodayViewModel()
-    @State private var selectedHabit: Habit?
-    @State private var selectedCard: TaskCard?
+    @State private var selectedHabitID: UUID?
+    @State private var selectedCardID: UUID?
     @State private var isCreatingHabit = false
     @State private var isCreatingCard = false
     private let today = Date.now
@@ -32,7 +32,7 @@ struct TodayView: View {
                 }
                 .padding(16)
             }
-            .background(Color(.systemGroupedBackground))
+            .background(AppTheme.screenBackground)
             .navigationTitle("今日")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -66,20 +66,26 @@ struct TodayView: View {
         } message: {
             Text(viewModel.errorMessage ?? "不明なエラーです。")
         }
-        .sheet(item: $selectedHabit) { habit in
-            AchievementPickerSheet(
-                cardTitle: habit.title,
-                selectedAchievement: viewModel.achievement(for: habit, date: today)
-            ) { achievement in
-                setAchievement(achievement, for: habit)
+        .sheet(isPresented: selectedHabitBinding) {
+            if let habit = selectedHabit {
+                AchievementPickerSheet(
+                    cardTitle: habit.title,
+                    selectedAchievement: viewModel.achievement(for: habit, date: today),
+                    memo: viewModel.memo(for: habit, date: today)
+                ) { achievement, memo in
+                    setAchievement(achievement, memo: memo, for: habit)
+                }
             }
         }
-        .sheet(item: $selectedCard) { card in
-            AchievementPickerSheet(
-                cardTitle: card.title,
-                selectedAchievement: viewModel.achievement(for: card, date: today)
-            ) { achievement in
-                setAchievement(achievement, for: card)
+        .sheet(isPresented: selectedCardBinding) {
+            if let card = selectedCard {
+                AchievementPickerSheet(
+                    cardTitle: card.title,
+                    selectedAchievement: viewModel.achievement(for: card, date: today),
+                    memo: viewModel.memo(for: card, date: today)
+                ) { achievement, memo in
+                    setAchievement(achievement, memo: memo, for: card)
+                }
             }
         }
         .sheet(isPresented: $isCreatingHabit) {
@@ -88,6 +94,9 @@ struct TodayView: View {
         .sheet(isPresented: $isCreatingCard) {
             TaskCardFormView(card: nil, nextSortOrder: nextIndependentCardSortOrder)
         }
+        .onAppear(perform: updateWidgetSnapshot)
+        .onChange(of: todayHabits.map(\.updatedAt)) { _, _ in updateWidgetSnapshot() }
+        .onChange(of: todayCards.map(\.updatedAt)) { _, _ in updateWidgetSnapshot() }
     }
 
     private var dateHeader: some View {
@@ -115,14 +124,15 @@ struct TodayView: View {
                 ForEach(todayHabits) { habit in
                     let achievement = viewModel.achievement(for: habit, date: today)
                     Button {
-                        selectedHabit = habit
+                        selectedHabitID = habit.id
                     } label: {
                         HabitRowView(
                             habit: habit,
                             achievement: achievement,
                             showsActiveStatus: false,
                             isCompleted: achievement != nil,
-                            showsExecutionTime: true
+                            showsExecutionTime: true,
+                            achievementMemo: viewModel.memo(for: habit, date: today)
                         )
                     }
                     .buttonStyle(.plain)
@@ -146,9 +156,10 @@ struct TodayView: View {
                         showsDueDate: false,
                         showsExecutionTime: true,
                         strikesThroughCompletedTitle: false,
-                        usesSimpleCompletionStatus: true
+                        usesSimpleCompletionStatus: true,
+                        achievementMemo: viewModel.memo(for: card, date: today)
                     ) {
-                        selectedCard = card
+                        selectedCardID = card.id
                     }
                 }
             }
@@ -161,11 +172,35 @@ struct TodayView: View {
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(18)
-            .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
+            .background(AppTheme.cardBackground, in: RoundedRectangle(cornerRadius: 16))
     }
 
     private var nextIndependentCardSortOrder: Int {
         (cards.filter { $0.habit == nil }.map(\.sortOrder).max() ?? -1) + 1
+    }
+
+    private var selectedHabit: Habit? {
+        guard let selectedHabitID else { return nil }
+        return todayHabits.first { $0.id == selectedHabitID } ?? habits.first { $0.id == selectedHabitID }
+    }
+
+    private var selectedCard: TaskCard? {
+        guard let selectedCardID else { return nil }
+        return todayCards.first { $0.id == selectedCardID } ?? cards.first { $0.id == selectedCardID }
+    }
+
+    private var selectedHabitBinding: Binding<Bool> {
+        Binding(
+            get: { selectedHabitID != nil },
+            set: { if !$0 { selectedHabitID = nil } }
+        )
+    }
+
+    private var selectedCardBinding: Binding<Bool> {
+        Binding(
+            get: { selectedCardID != nil },
+            set: { if !$0 { selectedCardID = nil } }
+        )
     }
 
     private var completionOverlay: some View {
@@ -177,7 +212,7 @@ struct TodayView: View {
         }
         .foregroundStyle(.white)
         .padding(24)
-        .background(Color(red: 0.06, green: 0.58, blue: 0.42).opacity(0.94), in: RoundedRectangle(cornerRadius: 22))
+        .background(AppTheme.tint.opacity(0.94), in: RoundedRectangle(cornerRadius: 22))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("完了しました")
     }
@@ -186,11 +221,12 @@ struct TodayView: View {
         Binding(get: { viewModel.errorMessage != nil }, set: { if !$0 { viewModel.clearError() } })
     }
 
-    private func setAchievement(_ achievement: TaskAchievement?, for habit: Habit) {
+    private func setAchievement(_ achievement: TaskAchievement?, memo: String, for habit: Habit) {
         withAnimation(.easeInOut(duration: 0.22)) {
-            viewModel.setAchievement(achievement, of: habit, using: modelContext, date: today)
+            viewModel.setAchievement(achievement, of: habit, using: modelContext, date: today, memo: memo)
         }
-        guard achievement != nil else { return }
+        updateWidgetSnapshot()
+        guard achievement?.countsAsCompletion == true else { return }
         if settings.first?.hapticsEnabled ?? true {
             HapticService.playCompletionFeedback()
         }
@@ -202,11 +238,12 @@ struct TodayView: View {
         }
     }
 
-    private func setAchievement(_ achievement: TaskAchievement?, for card: TaskCard) {
+    private func setAchievement(_ achievement: TaskAchievement?, memo: String, for card: TaskCard) {
         withAnimation(.easeInOut(duration: 0.22)) {
-            viewModel.setAchievement(achievement, of: card, using: modelContext, date: today)
+            viewModel.setAchievement(achievement, of: card, using: modelContext, date: today, memo: memo)
         }
-        guard achievement != nil else { return }
+        updateWidgetSnapshot()
+        guard achievement?.countsAsCompletion == true else { return }
         if settings.first?.hapticsEnabled ?? true {
             HapticService.playCompletionFeedback()
         }
@@ -216,6 +253,10 @@ struct TodayView: View {
                 viewModel.clearCompletionAnimation()
             }
         }
+    }
+
+    private func updateWidgetSnapshot() {
+        WidgetSnapshotService.save(habits: todayHabits, cards: todayCards, date: today)
     }
 }
 

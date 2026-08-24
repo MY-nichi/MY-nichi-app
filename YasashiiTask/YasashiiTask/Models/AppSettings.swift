@@ -3,7 +3,7 @@ import SwiftData
 
 @Model
 final class AppSettings {
-    @Attribute(.unique) var id: UUID
+    var id: UUID
     var theme: String
     var notificationsEnabled: Bool
     var hapticsEnabled: Bool

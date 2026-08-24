@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		D7AF1007300C000100187AEC /* YasashiiTaskWidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = D7AF1001300C000100187AEC /* YasashiiTaskWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		D7AEED07300B53D600187AEC /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -21,12 +25,34 @@
 			remoteGlobalIDString = D7AEECF6300B53D300187AEC;
 			remoteInfo = YasashiiTask;
 		};
+		D7AF1008300C000100187AEC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D7AEECEF300B53D300187AEC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D7AF1000300C000100187AEC;
+			remoteInfo = YasashiiTaskWidget;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D7AF1006300C000100187AEC /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				D7AF1007300C000100187AEC /* YasashiiTaskWidget.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		D7AEECF7300B53D300187AEC /* YasashiiTask.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = YasashiiTask.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D7AEED06300B53D600187AEC /* YasashiiTaskTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = YasashiiTaskTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D7AEED10300B53D600187AEC /* YasashiiTaskUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = YasashiiTaskUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D7AF1001300C000100187AEC /* YasashiiTaskWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = YasashiiTaskWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -43,6 +69,11 @@
 		D7AEED13300B53D600187AEC /* YasashiiTaskUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = YasashiiTaskUITests;
+			sourceTree = "<group>";
+		};
+		D7AF1002300C000100187AEC /* YasashiiTaskWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = YasashiiTaskWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -69,6 +100,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D7AF1004300C000100187AEC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -76,6 +114,7 @@
 			isa = PBXGroup;
 			children = (
 				D7AEECF9300B53D300187AEC /* YasashiiTask */,
+				D7AF1002300C000100187AEC /* YasashiiTaskWidget */,
 				D7AEED09300B53D600187AEC /* YasashiiTaskTests */,
 				D7AEED13300B53D600187AEC /* YasashiiTaskUITests */,
 				D7AEECF8300B53D300187AEC /* Products */,
@@ -86,6 +125,7 @@
 			isa = PBXGroup;
 			children = (
 				D7AEECF7300B53D300187AEC /* YasashiiTask.app */,
+				D7AF1001300C000100187AEC /* YasashiiTaskWidget.appex */,
 				D7AEED06300B53D600187AEC /* YasashiiTaskTests.xctest */,
 				D7AEED10300B53D600187AEC /* YasashiiTaskUITests.xctest */,
 			);
@@ -163,6 +203,28 @@
 			productReference = D7AEED10300B53D600187AEC /* YasashiiTaskUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		D7AF1000300C000100187AEC /* YasashiiTaskWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D7AF100E300C000100187AEC /* Build configuration list for PBXNativeTarget "YasashiiTaskWidget" */;
+			buildPhases = (
+				D7AF1003300C000100187AEC /* Sources */,
+				D7AF1004300C000100187AEC /* Frameworks */,
+				D7AF1005300C000100187AEC /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D7AF1002300C000100187AEC /* YasashiiTaskWidget */,
+			);
+			name = YasashiiTaskWidget;
+			packageProductDependencies = (
+			);
+			productName = YasashiiTaskWidget;
+			productReference = D7AF1001300C000100187AEC /* YasashiiTaskWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -175,6 +237,14 @@
 				TargetAttributes = {
 					D7AEECF6300B53D300187AEC = {
 						CreatedOnToolsVersion = 26.6;
+						SystemCapabilities = {
+							com.apple.ApplicationGroups.iOS = {
+								enabled = 1;
+							};
+							com.apple.iCloud = {
+								enabled = 1;
+							};
+						};
 					};
 					D7AEED05300B53D600187AEC = {
 						CreatedOnToolsVersion = 26.6;
@@ -183,6 +253,14 @@
 					D7AEED0F300B53D600187AEC = {
 						CreatedOnToolsVersion = 26.6;
 						TestTargetID = D7AEECF6300B53D300187AEC;
+					};
+					D7AF1000300C000100187AEC = {
+						CreatedOnToolsVersion = 26.6;
+						SystemCapabilities = {
+							com.apple.ApplicationGroups.iOS = {
+								enabled = 1;
+							};
+						};
 					};
 				};
 			};
@@ -201,6 +279,7 @@
 			projectRoot = "";
 			targets = (
 				D7AEECF6300B53D300187AEC /* YasashiiTask */,
+				D7AF1000300C000100187AEC /* YasashiiTaskWidget */,
 				D7AEED05300B53D600187AEC /* YasashiiTaskTests */,
 				D7AEED0F300B53D600187AEC /* YasashiiTaskUITests */,
 			);
@@ -223,6 +302,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		D7AEED0E300B53D600187AEC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D7AF1005300C000100187AEC /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -253,6 +339,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D7AF1003300C000100187AEC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -265,6 +358,11 @@
 			isa = PBXTargetDependency;
 			target = D7AEECF6300B53D300187AEC /* YasashiiTask */;
 			targetProxy = D7AEED11300B53D600187AEC /* PBXContainerItemProxy */;
+		};
+		D7AF1009300C000100187AEC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D7AF1000300C000100187AEC /* YasashiiTaskWidget */;
+			targetProxy = D7AF1008300C000100187AEC /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -397,13 +495,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = CMPDHFP84Q;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "MY-nichi";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "YasashiiTask-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -430,13 +523,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = CMPDHFP84Q;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "MY-nichi";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "YasashiiTask-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -534,6 +622,62 @@
 			};
 			name = Release;
 		};
+		D7AF100C300C000100187AEC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = YasashiiTaskWidget/YasashiiTaskWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CMPDHFP84Q;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "YasashiiTaskWidget-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = jp.kishiko.YasashiiTask.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		D7AF100D300C000100187AEC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = YasashiiTaskWidget/YasashiiTaskWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CMPDHFP84Q;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "YasashiiTaskWidget-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = jp.kishiko.YasashiiTask.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -569,6 +713,15 @@
 			buildConfigurations = (
 				D7AEED21300B53D600187AEC /* Debug */,
 				D7AEED22300B53D600187AEC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D7AF100E300C000100187AEC /* Build configuration list for PBXNativeTarget "YasashiiTaskWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D7AF100C300C000100187AEC /* Debug */,
+				D7AF100D300C000100187AEC /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

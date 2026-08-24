@@ -34,7 +34,7 @@ struct TimelineView: View {
                 }
             }
             .environment(\.editMode, $editMode)
-            .background(Color(.systemGroupedBackground))
+            .background(AppTheme.screenBackground)
         }
         .task {
             while !Task.isCancelled {
@@ -86,12 +86,12 @@ struct TimelineView: View {
             Text(now.formatted(date: .omitted, time: .shortened))
                 .font(.caption.monospacedDigit().bold())
             Rectangle()
-                .fill(Color(red: 0.06, green: 0.58, blue: 0.42))
+                .fill(AppTheme.tint)
                 .frame(height: 2)
             Text("現在")
                 .font(.caption.weight(.semibold))
         }
-        .foregroundStyle(Color(red: 0.06, green: 0.58, blue: 0.42))
+        .foregroundStyle(AppTheme.tint)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("現在時刻、\(now.formatted(date: .omitted, time: .shortened))")
     }

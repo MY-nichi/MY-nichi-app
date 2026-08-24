@@ -88,9 +88,6 @@ final class TodayViewModel {
         let cards = cards.filter { card in
             guard card.isScheduled(on: date, calendar: calendar) else { return false }
             if card.repeatRule != nil {
-                if card.isCompleted, let completedAt = card.completedAt {
-                    return calendar.isDate(completedAt, inSameDayAs: date)
-                }
                 return true
             }
             if let dueDate = card.dueDate {
@@ -103,7 +100,9 @@ final class TodayViewModel {
         }
 
         return cards.sorted {
-            if $0.isCompleted != $1.isCompleted { return !$0.isCompleted }
+            let firstCompleted = isCompleted($0, date: date, calendar: calendar)
+            let secondCompleted = isCompleted($1, date: date, calendar: calendar)
+            if firstCompleted != secondCompleted { return !firstCompleted }
             if $0.reminderTime != $1.reminderTime {
                 return ($0.reminderTime ?? .distantFuture) < ($1.reminderTime ?? .distantFuture)
             }
@@ -113,11 +112,12 @@ final class TodayViewModel {
 
     func summary(for cards: [TaskCard], date: Date = .now, calendar: Calendar = .current) -> TodaySummary {
         let startOfToday = calendar.startOfDay(for: date)
+        let activeCards = cards.filter { achievement(for: $0, date: date, calendar: calendar) != .rest }
         return TodaySummary(
-            completed: cards.filter(\.isCompleted).count,
-            incomplete: cards.filter { !$0.isCompleted }.count,
-            overdue: cards.filter { card in
-                guard !card.isCompleted, let dueDate = card.dueDate else { return false }
+            completed: activeCards.filter { isCompleted($0, date: date, calendar: calendar) }.count,
+            incomplete: activeCards.filter { !isCompleted($0, date: date, calendar: calendar) }.count,
+            overdue: activeCards.filter { card in
+                guard !isCompleted(card, date: date, calendar: calendar), let dueDate = card.dueDate else { return false }
                 return dueDate < startOfToday
             }.count
         )
@@ -128,8 +128,8 @@ final class TodayViewModel {
         date: Date = .now,
         calendar: Calendar = .current
     ) -> TaskAchievement? {
-        completionRecord(for: card, date: date, calendar: calendar)?.achievement
-            ?? (card.isCompleted ? .achieved : nil)
+        completionRecord(for: card, date: date, calendar: calendar)?.achievement ??
+            (card.repeatRule == nil && card.isCompleted ? .achieved : nil)
     }
 
     func setAchievement(
@@ -137,34 +137,39 @@ final class TodayViewModel {
         of card: TaskCard,
         using modelContext: ModelContext,
         date: Date = .now,
-        calendar: Calendar = .current
+        calendar: Calendar = .current,
+        memo: String? = nil
     ) {
         let wasCompleted = card.isCompleted
         let previousCompletedAt = card.completedAt
         let record = completionRecord(for: card, date: date, calendar: calendar)
 
-        card.isCompleted = achievement != nil
+        let storesGlobalCompletion = card.repeatRule == nil
+        card.isCompleted = storesGlobalCompletion && (achievement?.countsAsCompletion ?? false)
         card.completedAt = card.isCompleted ? date : nil
         card.updatedAt = date
 
-        if card.isCompleted {
+        if let achievement {
             if let record {
                 record.achievement = achievement
-                record.completedAt = date
+                record.completedAt = achievement.countsAsCompletion ? date : nil
+                if let memo { record.memo = memo }
             } else {
                 let newRecord = CompletionRecord(
                     habit: card.habit,
                     taskCard: card,
                     targetDate: calendar.startOfDay(for: date),
-                    completedAt: date,
-                    status: achievement?.rawValue ?? "pending"
+                    completedAt: achievement.countsAsCompletion ? date : nil,
+                    status: achievement.rawValue,
+                    memo: memo ?? ""
                 )
                 modelContext.insert(newRecord)
             }
-            recentlyCompletedCardID = card.id
+            recentlyCompletedCardID = achievement.countsAsCompletion ? card.id : nil
         } else {
             record?.achievement = nil
             record?.completedAt = nil
+            record?.memo = ""
             recentlyCompletedCardID = nil
         }
 
@@ -191,23 +196,26 @@ final class TodayViewModel {
         of habit: Habit,
         using modelContext: ModelContext,
         date: Date = .now,
-        calendar: Calendar = .current
+        calendar: Calendar = .current,
+        memo: String? = nil
     ) {
         let record = completionRecord(for: habit, date: date, calendar: calendar)
 
         if let record {
             record.achievement = achievement
-            record.completedAt = achievement == nil ? nil : date
+            record.completedAt = achievement?.countsAsCompletion == true ? date : nil
+            if let memo { record.memo = memo }
         } else if let achievement {
             modelContext.insert(CompletionRecord(
                 habit: habit,
                 targetDate: calendar.startOfDay(for: date),
-                completedAt: date,
-                status: achievement.rawValue
+                completedAt: achievement.countsAsCompletion ? date : nil,
+                status: achievement.rawValue,
+                memo: memo ?? ""
             ))
         }
         habit.updatedAt = date
-        recentlyCompletedCardID = achievement == nil ? nil : habit.id
+        recentlyCompletedCardID = achievement?.countsAsCompletion == true ? habit.id : nil
 
         do {
             try modelContext.save()
@@ -227,12 +235,39 @@ final class TodayViewModel {
         setAchievement(nextValue, of: card, using: modelContext, date: date, calendar: calendar)
     }
 
+    func memo(
+        for card: TaskCard,
+        date: Date = .now,
+        calendar: Calendar = .current
+    ) -> String {
+        completionRecord(for: card, date: date, calendar: calendar)?.memo ?? ""
+    }
+
+    func memo(
+        for habit: Habit,
+        date: Date = .now,
+        calendar: Calendar = .current
+    ) -> String {
+        completionRecord(for: habit, date: date, calendar: calendar)?.memo ?? ""
+    }
+
     func clearCompletionAnimation() {
         recentlyCompletedCardID = nil
     }
 
     func clearError() {
         errorMessage = nil
+    }
+
+    private func isCompleted(
+        _ card: TaskCard,
+        date: Date,
+        calendar: Calendar
+    ) -> Bool {
+        if let achievement = achievement(for: card, date: date, calendar: calendar) {
+            return achievement.countsAsCompletion
+        }
+        return card.repeatRule == nil && card.isCompleted
     }
 
     private func completionRecord(

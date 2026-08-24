@@ -30,7 +30,7 @@ struct HabitListView: View {
                     .accessibilityHint("新しい習慣の入力画面を開きます")
                 }
             }
-            .background(Color(.systemGroupedBackground))
+            .background(AppTheme.screenBackground)
         }
         .sheet(isPresented: $isCreatingHabit) {
             HabitFormView(habit: nil, nextSortOrder: viewModel.nextSortOrder(from: habits))
@@ -93,7 +93,11 @@ struct HabitListView: View {
                 Button {
                     habitBeingEdited = habit
                 } label: {
-                    HabitRowView(habit: habit, showsSchedule: true)
+                    HabitRowView(
+                        habit: habit,
+                        showsSchedule: true,
+                        streakCount: viewModel.streakCount(for: habit)
+                    )
                 }
                 .buttonStyle(.plain)
                 .accessibilityHint("習慣の編集画面を開きます")
