@@ -10,9 +10,6 @@ struct TodayWidgetSnapshot: Codable {
 @MainActor
 enum WidgetSnapshotService {
     static func save(habits: [Habit], cards: [TaskCard], date: Date = .now, calendar: Calendar = .current) {
-        #if DEBUG
-        return
-        #else
         let snapshot = TodayWidgetSnapshot(
             dateLabel: date.formatted(.dateTime.month().day().weekday(.abbreviated).locale(Locale(identifier: "ja_JP"))),
             habits: habits.map(\.title),
@@ -22,6 +19,5 @@ enum WidgetSnapshotService {
               let defaults = UserDefaults(suiteName: AppConstants.appGroupIdentifier) else { return }
         defaults.set(data, forKey: AppConstants.widgetSnapshotKey)
         WidgetCenter.shared.reloadAllTimelines()
-        #endif
     }
 }

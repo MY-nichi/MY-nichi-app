@@ -47,18 +47,23 @@ struct ContentView: View {
         }
         .tint(AppTheme.tint)
         .preferredColorScheme(.light)
+        .background(AppTheme.screenBackground.ignoresSafeArea())
         .onAppear(perform: updateWidgetSnapshot)
         .onChange(of: habits.map(\.updatedAt)) { _, _ in updateWidgetSnapshot() }
         .onChange(of: cards.map(\.updatedAt)) { _, _ in updateWidgetSnapshot() }
         .safeAreaInset(edge: .top) {
             if let startupWarning {
-                Label(startupWarning, systemImage: "exclamationmark.triangle.fill")
-                    .font(.footnote)
-                    .foregroundStyle(.white)
-                    .padding(10)
-                    .frame(maxWidth: .infinity)
-                    .background(Color.orange)
-                    .accessibilityElement(children: .combine)
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+                    Text(startupWarning)
+                        .foregroundStyle(.primary)
+                }
+                .font(.footnote)
+                .padding(10)
+                .frame(maxWidth: .infinity)
+                .background(AppTheme.softGreen)
+                .accessibilityElement(children: .combine)
             }
         }
     }

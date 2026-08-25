@@ -21,6 +21,11 @@ struct TodayView: View {
         viewModel.independentCardsForToday(from: cards, date: today)
     }
 
+    private var displayName: String? {
+        let name = settings.first?.displayName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return name.isEmpty ? nil : name
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -100,18 +105,26 @@ struct TodayView: View {
     }
 
     private var dateHeader: some View {
-        Text(today.formatted(
-            .dateTime
-                .year()
-                .month(.wide)
-                .day()
-                .weekday(.wide)
-                .locale(Locale(identifier: "ja_JP"))
-        ))
-            .font(.title.weight(.semibold))
-            .foregroundStyle(.secondary)
-            .fixedSize(horizontal: false, vertical: true)
-            .accessibilityLabel("今日、\(today.formatted(date: .long, time: .omitted))")
+        VStack(alignment: .leading, spacing: 4) {
+            if let displayName {
+                Text("\(displayName)さんの今日")
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(AppTheme.tint)
+            }
+            Text(today.formatted(
+                .dateTime
+                    .year()
+                    .month(.wide)
+                    .day()
+                    .weekday(.wide)
+                    .locale(Locale(identifier: "ja_JP"))
+            ))
+                .font(.title.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("今日、\(today.formatted(date: .long, time: .omitted))")
     }
 
     private var habitsSection: some View {

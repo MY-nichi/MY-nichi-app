@@ -62,7 +62,7 @@ private struct YasashiiTaskWidgetView: View {
             if items.isEmpty {
                 Text("なし").font(.caption2).foregroundStyle(.secondary)
             } else {
-                ForEach(items.prefix(3), id: \.self) { item in
+                ForEach(Array(items.prefix(3).enumerated()), id: \.offset) { _, item in
                     Text("・\(item)")
                         .font(.caption2)
                         .lineLimit(1)

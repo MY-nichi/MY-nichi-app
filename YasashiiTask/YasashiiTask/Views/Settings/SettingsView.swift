@@ -50,15 +50,6 @@ private struct SettingsForm: View {
                 Text("入力した名前は、この端末内だけに保存します。")
             }
 
-            Section("外観") {
-                Picker("テーマ", selection: $settings.theme) {
-                    Text("端末に合わせる").tag("system")
-                    Text("ライト").tag("light")
-                    Text("ダーク").tag("dark")
-                }
-                .onChange(of: settings.theme) { _, _ in save() }
-            }
-
             Section("リマインダー") {
                 Toggle("振動", isOn: $settings.hapticsEnabled)
                     .onChange(of: settings.hapticsEnabled) { _, _ in save() }

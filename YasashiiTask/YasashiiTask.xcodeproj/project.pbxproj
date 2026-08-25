@@ -142,10 +142,12 @@
 				D7AEECF3300B53D300187AEC /* Sources */,
 				D7AEECF4300B53D300187AEC /* Frameworks */,
 				D7AEECF5300B53D300187AEC /* Resources */,
+				D7AF1006300C000100187AEC /* Embed App Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				D7AF1009300C000100187AEC /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				D7AEECF9300B53D300187AEC /* YasashiiTask */,
@@ -625,7 +627,6 @@
 		D7AF100C300C000100187AEC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = YasashiiTaskWidget/YasashiiTaskWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = CMPDHFP84Q;
@@ -653,7 +654,6 @@
 		D7AF100D300C000100187AEC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = YasashiiTaskWidget/YasashiiTaskWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = CMPDHFP84Q;
