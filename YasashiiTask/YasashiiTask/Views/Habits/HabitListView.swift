@@ -22,6 +22,7 @@ struct HabitListView: View {
                 }
             }
             .navigationTitle("習慣")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("習慣を追加", systemImage: "plus") {

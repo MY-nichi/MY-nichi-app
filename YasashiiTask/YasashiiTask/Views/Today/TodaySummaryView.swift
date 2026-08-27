@@ -2,18 +2,19 @@ import SwiftUI
 
 struct TodaySummaryView: View {
     let summary: TodaySummary
+    var compact = false
 
     private let emerald = AppTheme.tint
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: compact ? 10 : 14) {
             HStack {
                 VStack(alignment: .leading, spacing: 3) {
                     Text("今日の達成率")
-                        .font(.subheadline)
+                        .font(compact ? .caption.weight(.semibold) : .subheadline)
                         .foregroundStyle(.primary)
                     Text("\(summary.achievementRate)%")
-                        .font(.largeTitle.bold())
+                        .font(compact ? .title2.bold() : .largeTitle.bold())
                         .foregroundStyle(emerald)
                 }
                 Spacer()
@@ -28,7 +29,7 @@ struct TodaySummaryView: View {
                         .font(.caption.bold())
                         .foregroundStyle(emerald)
                 }
-                    .frame(width: 48, height: 48)
+                    .frame(width: compact ? 38 : 48, height: compact ? 38 : 48)
                     .accessibilityLabel("今日の達成率")
                     .accessibilityValue("\(summary.achievementRate)パーセント")
             }
@@ -39,16 +40,16 @@ struct TodaySummaryView: View {
                 summaryItem("期限超過", count: summary.overdue, icon: "exclamationmark.triangle.fill")
             }
         }
-        .padding(18)
+        .padding(compact ? 14 : 18)
         .background(AppTheme.cardBackground, in: RoundedRectangle(cornerRadius: 20))
     }
 
     private func summaryItem(_ title: String, count: Int, icon: String) -> some View {
-        VStack(spacing: 5) {
+        VStack(spacing: compact ? 3 : 5) {
             Label("\(count)", systemImage: icon)
-                .font(.headline)
+                .font(compact ? .subheadline.weight(.semibold) : .headline)
             Text(title)
-                .font(.caption)
+                .font(compact ? .caption2 : .caption)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)

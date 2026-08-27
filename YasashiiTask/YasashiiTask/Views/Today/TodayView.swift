@@ -31,14 +31,15 @@ struct TodayView: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 22) {
                     dateHeader
-                    TodaySummaryView(summary: viewModel.summary(for: todayCards, date: today))
+                    TodaySummaryView(summary: viewModel.summary(for: todayCards, date: today), compact: true)
                     habitsSection
                     cardsSection
                 }
                 .padding(16)
             }
             .background(AppTheme.screenBackground)
-            .navigationTitle("今日")
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     NavigationLink {
@@ -107,7 +108,11 @@ struct TodayView: View {
     private var dateHeader: some View {
         VStack(alignment: .leading, spacing: 4) {
             if let displayName {
-                Text("\(displayName)さんの今日")
+                Text("\(displayName)さん")
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(AppTheme.tint)
+            } else {
+                Text("今日")
                     .font(.title3.weight(.semibold))
                     .foregroundStyle(AppTheme.tint)
             }
@@ -119,7 +124,7 @@ struct TodayView: View {
                     .weekday(.wide)
                     .locale(Locale(identifier: "ja_JP"))
             ))
-                .font(.title.weight(.semibold))
+                .font(.headline.weight(.semibold))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -145,7 +150,8 @@ struct TodayView: View {
                             showsActiveStatus: false,
                             isCompleted: achievement != nil,
                             showsExecutionTime: true,
-                            achievementMemo: viewModel.memo(for: habit, date: today)
+                            achievementMemo: viewModel.memo(for: habit, date: today),
+                            compact: true
                         )
                     }
                     .buttonStyle(.plain)

@@ -18,6 +18,7 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("設定")
+            .navigationBarTitleDisplayMode(.inline)
         }
         .task {
             viewModel.ensureSettings(settings, using: modelContext)

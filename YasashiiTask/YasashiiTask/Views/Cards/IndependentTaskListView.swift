@@ -50,6 +50,7 @@ struct IndependentTaskListView: View {
                 }
             }
             .navigationTitle("タスク")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("タスクを追加", systemImage: "plus") {

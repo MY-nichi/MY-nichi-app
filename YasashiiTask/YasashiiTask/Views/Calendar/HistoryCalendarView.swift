@@ -67,12 +67,14 @@ struct HistoryCalendarView: View {
             }
             .background(AppTheme.screenBackground)
             .navigationTitle("カレンダー")
+            .navigationBarTitleDisplayMode(.inline)
         }
         .sheet(item: $selectedHabit) { habit in
             AchievementPickerSheet(
                 cardTitle: habit.title,
                 selectedAchievement: achievement(for: habit),
-                memo: record(for: habit)?.memo ?? ""
+                memo: record(for: habit)?.memo ?? "",
+                showsNavigationTitle: false
             ) { achievement, memo in
                 setAchievement(achievement, memo: memo, for: habit)
             }
@@ -81,7 +83,8 @@ struct HistoryCalendarView: View {
             AchievementPickerSheet(
                 cardTitle: card.title,
                 selectedAchievement: achievement(for: card),
-                memo: record(for: card)?.memo ?? ""
+                memo: record(for: card)?.memo ?? "",
+                showsNavigationTitle: false
             ) { achievement, memo in
                 setAchievement(achievement, memo: memo, for: card)
             }
@@ -159,9 +162,7 @@ struct HistoryCalendarView: View {
                 Text("\(calendar.component(.day, from: date))")
                     .font(.subheadline.weight(isToday ? .bold : .regular))
                 if let latestAchievement {
-                    Text(latestAchievement.mark)
-                        .font(.caption2.bold())
-                        .foregroundStyle(isSelected ? Color.white : latestAchievement.color)
+                    AchievementFaceIcon(achievement: latestAchievement, compact: true, size: 18)
                 } else {
                     Image(systemName: "circle")
                         .font(.caption2)

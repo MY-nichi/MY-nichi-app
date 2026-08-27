@@ -9,6 +9,7 @@ struct HabitRowView: View {
     var showsSchedule = false
     var achievementMemo = ""
     var streakCount: Int? = nil
+    var compact = false
 
     private var habitColor: Color {
         let hex = habit.colorHex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
@@ -21,39 +22,41 @@ struct HabitRowView: View {
     }
 
     var body: some View {
-        HStack(alignment: .top, spacing: 14) {
+        HStack(alignment: compact ? .center : .top, spacing: compact ? 10 : 14) {
             Group {
                 if let achievement {
                     AchievementStampView(achievement: achievement, compact: true)
-                        .frame(width: 44, height: 44)
+                        .frame(width: compact ? 40 : 44, height: compact ? 40 : 44)
                 } else if habit.iconName == "sparkles",
                    let customText = habit.customIconText,
                    !customText.isEmpty {
                     Text(customText)
-                        .font(.headline)
+                        .font(compact ? .subheadline.weight(.semibold) : .headline)
                         .lineLimit(1)
                         .minimumScaleFactor(0.5)
                 } else {
                     Image(systemName: habit.iconName)
-                        .font(.title2)
+                        .font(compact ? .title3 : .title2)
                 }
             }
                 .foregroundStyle(habitColor)
-                .frame(width: 44, height: 44)
+                .frame(width: compact ? 40 : 44, height: compact ? 40 : 44)
                 .background(habitColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
                 .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: compact ? 4 : 6) {
                 Text(habit.title)
                     .font(.headline)
                     .foregroundStyle(.primary)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(compact ? 1 : nil)
+                    .fixedSize(horizontal: false, vertical: !compact)
 
                 if !habit.detail.isEmpty {
                     Text(habit.detail)
-                        .font(.subheadline)
+                        .font(compact ? .caption : .subheadline)
                         .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(compact ? 1 : nil)
+                        .fixedSize(horizontal: false, vertical: !compact)
                 }
 
                 if showsActiveStatus {
@@ -93,8 +96,8 @@ struct HabitRowView: View {
                     Text(achievementMemo)
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(compact ? 1 : 2)
+                        .fixedSize(horizontal: false, vertical: !compact)
                 }
 
             }
@@ -102,7 +105,7 @@ struct HabitRowView: View {
             Spacer(minLength: 8)
 
         }
-        .padding(16)
+        .padding(compact ? 12 : 16)
         .background(AppTheme.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 18))
         .contentShape(Rectangle())

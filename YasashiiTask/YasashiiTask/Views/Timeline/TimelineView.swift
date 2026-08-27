@@ -26,6 +26,7 @@ struct TimelineView: View {
                 }
             }
             .navigationTitle("タイムライン")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 Button(editMode == .active ? "完了" : "並び替え") {
                     withAnimation {

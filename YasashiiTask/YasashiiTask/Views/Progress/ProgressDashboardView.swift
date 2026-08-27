@@ -23,6 +23,7 @@ struct ProgressDashboardView: View {
                 encouragement
                 summaryGrid
                 weeklySection
+                habitReflectionSection
                 habitsSection
             }
             .padding(16)
@@ -74,6 +75,50 @@ struct ProgressDashboardView: View {
         }
     }
 
+    private var habitReflectionSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("今週の振り返り")
+                .font(.title2.bold())
+            if reflectedHabits.isEmpty {
+                Label("習慣を記録すると振り返りが表示されます", systemImage: "sparkles")
+                    .foregroundStyle(.secondary)
+                    .padding(16)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(AppTheme.cardBackground, in: RoundedRectangle(cornerRadius: 18))
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack(spacing: 8) {
+                            Text("習慣")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.secondary)
+                                .frame(width: 104, alignment: .leading)
+                            ForEach(reflectionDates, id: \.self) { date in
+                                Text(dayLabel(for: date))
+                                    .font(.caption2.weight(.semibold))
+                                    .foregroundStyle(.secondary)
+                                    .frame(width: 34)
+                            }
+                        }
+                        ForEach(reflectedHabits) { habit in
+                            HStack(spacing: 8) {
+                                Text(habit.title)
+                                    .font(.caption.weight(.semibold))
+                                    .lineLimit(1)
+                                    .frame(width: 104, alignment: .leading)
+                                ForEach(reflectionDates, id: \.self) { date in
+                                    reflectionStamp(for: habit, on: date)
+                                }
+                            }
+                        }
+                    }
+                    .padding(16)
+                }
+                .background(AppTheme.cardBackground, in: RoundedRectangle(cornerRadius: 18))
+            }
+        }
+    }
+
     private var habitsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("習慣ごとの実績")
@@ -113,6 +158,46 @@ struct ProgressDashboardView: View {
                 }
             }
         }
+    }
+
+    private var reflectedHabits: [Habit] {
+        habits
+            .filter { !$0.isArchived }
+            .sorted { $0.sortOrder < $1.sortOrder }
+    }
+
+    private var reflectionDates: [Date] {
+        let calendar = Calendar.current
+        let todayStart = calendar.startOfDay(for: today)
+        return (0..<7).compactMap { offset in
+            calendar.date(byAdding: .day, value: offset - 6, to: todayStart)
+        }
+    }
+
+    private func reflectionStamp(for habit: Habit, on date: Date) -> some View {
+        let achievement = records.first {
+            $0.habit?.id == habit.id && Calendar.current.isDate($0.targetDate, inSameDayAs: date)
+        }?.achievement
+
+        return Group {
+            if let achievement {
+                AchievementFaceIcon(achievement: achievement, compact: true, size: 30)
+            } else {
+                Text("・")
+                    .font(.title3)
+                    .frame(width: 30, height: 30)
+                    .background(AppTheme.chipBackground.opacity(0.14), in: Circle())
+            }
+        }
+        .frame(width: 34, height: 34)
+        .accessibilityLabel(achievement?.title ?? "記録なし")
+    }
+
+    private func dayLabel(for date: Date) -> String {
+        let day = Calendar.current.component(.day, from: date)
+        let weekday = Calendar.current.component(.weekday, from: date)
+        let weekdaySymbols = ["日", "月", "火", "水", "木", "金", "土"]
+        return "\(day)\n\(weekdaySymbols[max(0, weekday - 1)])"
     }
 }
 
