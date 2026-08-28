@@ -31,7 +31,7 @@ struct HabitListView: View {
                     .accessibilityHint("新しい習慣の入力画面を開きます")
                 }
             }
-            .background(AppTheme.screenBackground)
+            .appScreenBackground()
         }
         .sheet(isPresented: $isCreatingHabit) {
             HabitFormView(habit: nil, nextSortOrder: viewModel.nextSortOrder(from: habits))

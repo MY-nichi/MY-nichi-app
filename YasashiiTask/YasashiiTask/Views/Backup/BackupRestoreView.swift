@@ -49,7 +49,7 @@ struct BackupRestoreView: View {
             }
         }
         .scrollContentBackground(.hidden)
-        .background(AppTheme.screenBackground)
+        .appScreenBackground()
         .navigationTitle("バックアップ・復元")
         .navigationBarTitleDisplayMode(.inline)
         .fileExporter(isPresented: $isExporting, document: exportDocument, contentType: .json, defaultFilename: "yasashii-task-backup") { result in

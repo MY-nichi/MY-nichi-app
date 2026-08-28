@@ -65,7 +65,7 @@ struct HistoryCalendarView: View {
                 }
                 .padding(16)
             }
-            .background(AppTheme.screenBackground)
+            .appScreenBackground()
             .navigationTitle("カレンダー")
             .navigationBarTitleDisplayMode(.inline)
         }
@@ -73,8 +73,7 @@ struct HistoryCalendarView: View {
             AchievementPickerSheet(
                 cardTitle: habit.title,
                 selectedAchievement: achievement(for: habit),
-                memo: record(for: habit)?.memo ?? "",
-                showsNavigationTitle: false
+                memo: record(for: habit)?.memo ?? ""
             ) { achievement, memo in
                 setAchievement(achievement, memo: memo, for: habit)
             }
@@ -83,8 +82,7 @@ struct HistoryCalendarView: View {
             AchievementPickerSheet(
                 cardTitle: card.title,
                 selectedAchievement: achievement(for: card),
-                memo: record(for: card)?.memo ?? "",
-                showsNavigationTitle: false
+                memo: record(for: card)?.memo ?? ""
             ) { achievement, memo in
                 setAchievement(achievement, memo: memo, for: card)
             }
@@ -143,7 +141,7 @@ struct HistoryCalendarView: View {
             }
         }
         .padding(14)
-        .background(AppTheme.cardBackground, in: RoundedRectangle(cornerRadius: 20))
+        .polishedCard(cornerRadius: 20)
     }
 
     private func dayButton(_ date: Date) -> some View {

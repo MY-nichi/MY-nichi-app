@@ -59,7 +59,7 @@ struct IndependentTaskListView: View {
                     .accessibilityHint("新しいタスクの入力画面を開きます")
                 }
             }
-            .background(AppTheme.screenBackground)
+            .appScreenBackground()
             .sheet(isPresented: $isCreatingCard) {
                 TaskCardFormView(card: nil, nextSortOrder: viewModel.nextSortOrder(from: cards))
             }

@@ -41,18 +41,26 @@ struct TodaySummaryView: View {
             }
         }
         .padding(compact ? 14 : 18)
-        .background(AppTheme.cardBackground, in: RoundedRectangle(cornerRadius: 20))
+        .background(AppTheme.headerGradient, in: RoundedRectangle(cornerRadius: 22))
+        .overlay {
+            RoundedRectangle(cornerRadius: 22)
+                .stroke(AppTheme.cardStroke.opacity(0.75), lineWidth: 1.2)
+        }
+        .shadow(color: AppTheme.cardShadow, radius: 16, x: 0, y: 8)
     }
 
     private func summaryItem(_ title: String, count: Int, icon: String) -> some View {
         VStack(spacing: compact ? 3 : 5) {
             Label("\(count)", systemImage: icon)
                 .font(compact ? .subheadline.weight(.semibold) : .headline)
+                .foregroundStyle(AppTheme.tint)
             Text(title)
                 .font(compact ? .caption2 : .caption)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
+        .padding(.vertical, compact ? 8 : 10)
+        .background(AppTheme.chipBackground.opacity(0.80), in: RoundedRectangle(cornerRadius: 12))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(title)、\(count)件")
     }

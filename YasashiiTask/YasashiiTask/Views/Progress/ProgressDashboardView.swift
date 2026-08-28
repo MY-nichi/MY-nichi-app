@@ -28,7 +28,7 @@ struct ProgressDashboardView: View {
             }
             .padding(16)
         }
-        .background(AppTheme.screenBackground)
+        .appScreenBackground()
         .navigationTitle("進捗・振り返り")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -39,7 +39,11 @@ struct ProgressDashboardView: View {
             .foregroundStyle(AppTheme.tint)
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(AppTheme.tint.opacity(0.1), in: RoundedRectangle(cornerRadius: 18))
+            .background(AppTheme.softGreen, in: RoundedRectangle(cornerRadius: 18))
+            .overlay {
+                RoundedRectangle(cornerRadius: 18)
+                    .stroke(AppTheme.cardStroke.opacity(0.55), lineWidth: 1)
+            }
     }
 
     private var summaryGrid: some View {
@@ -61,7 +65,7 @@ struct ProgressDashboardView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .background(AppTheme.cardBackground, in: RoundedRectangle(cornerRadius: 18))
+        .polishedCard(cornerRadius: 18)
         .accessibilityElement(children: .combine)
     }
 
@@ -71,7 +75,7 @@ struct ProgressDashboardView: View {
                 .font(.title2.bold())
             WeeklyProgressChart(values: snapshot.dailyCompletions)
                 .padding(16)
-                .background(AppTheme.cardBackground, in: RoundedRectangle(cornerRadius: 18))
+                .polishedCard(cornerRadius: 18)
         }
     }
 
@@ -84,7 +88,7 @@ struct ProgressDashboardView: View {
                     .foregroundStyle(.secondary)
                     .padding(16)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(AppTheme.cardBackground, in: RoundedRectangle(cornerRadius: 18))
+                    .polishedCard(cornerRadius: 18)
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 10) {
@@ -114,7 +118,7 @@ struct ProgressDashboardView: View {
                     }
                     .padding(16)
                 }
-                .background(AppTheme.cardBackground, in: RoundedRectangle(cornerRadius: 18))
+                .polishedCard(cornerRadius: 18)
             }
         }
     }
@@ -153,7 +157,7 @@ struct ProgressDashboardView: View {
                             .foregroundStyle(.secondary)
                     }
                     .padding(14)
-                    .background(AppTheme.cardBackground, in: RoundedRectangle(cornerRadius: 16))
+                    .polishedCard(cornerRadius: 16)
                     .accessibilityElement(children: .combine)
                 }
             }

@@ -38,15 +38,20 @@ struct SettingsView: View {
 private struct SettingsForm: View {
     @Bindable var settings: AppSettings
     let save: () -> Void
+    @FocusState private var isNameFocused: Bool
 
     var body: some View {
         Form {
             Section {
                 TextField("お名前（任意）", text: displayNameBinding)
                     .textContentType(.name)
-                    .onSubmit(save)
+                    .submitLabel(.done)
+                    .focused($isNameFocused)
+                    .onSubmit {
+                        finishNameInput()
+                    }
             } header: {
-                Text("プロフィール")
+                Text("名前")
             } footer: {
                 Text("入力した名前は、この端末内だけに保存します。")
             }
@@ -71,7 +76,15 @@ private struct SettingsForm: View {
             }
         }
         .scrollContentBackground(.hidden)
-        .background(AppTheme.screenBackground)
+        .appScreenBackground()
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("完了") {
+                    finishNameInput()
+                }
+            }
+        }
     }
 
     private var displayNameBinding: Binding<String> {
@@ -79,9 +92,14 @@ private struct SettingsForm: View {
             get: { settings.displayName ?? "" },
             set: {
                 settings.displayName = $0.isEmpty ? nil : $0
-                save()
             }
         )
+    }
+
+    private func finishNameInput() {
+        save()
+        isNameFocused = false
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 }
 

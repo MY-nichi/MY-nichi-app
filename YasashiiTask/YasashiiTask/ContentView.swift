@@ -47,7 +47,9 @@ struct ContentView: View {
         }
         .tint(AppTheme.tint)
         .preferredColorScheme(.light)
-        .background(AppTheme.screenBackground.ignoresSafeArea())
+        .appScreenBackground()
+        .toolbarBackground(AppTheme.cardBackground, for: .tabBar)
+        .toolbarBackground(.visible, for: .tabBar)
         .onAppear(perform: updateWidgetSnapshot)
         .onChange(of: habits.map(\.updatedAt)) { _, _ in updateWidgetSnapshot() }
         .onChange(of: cards.map(\.updatedAt)) { _, _ in updateWidgetSnapshot() }

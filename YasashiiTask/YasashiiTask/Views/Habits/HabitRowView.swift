@@ -22,11 +22,11 @@ struct HabitRowView: View {
     }
 
     var body: some View {
-        HStack(alignment: compact ? .center : .top, spacing: compact ? 10 : 14) {
+        HStack(alignment: .center, spacing: compact ? 10 : 12) {
             Group {
                 if let achievement {
                     AchievementStampView(achievement: achievement, compact: true)
-                        .frame(width: compact ? 40 : 44, height: compact ? 40 : 44)
+                        .frame(width: compact ? 36 : 40, height: compact ? 36 : 40)
                 } else if habit.iconName == "sparkles",
                    let customText = habit.customIconText,
                    !customText.isEmpty {
@@ -40,11 +40,11 @@ struct HabitRowView: View {
                 }
             }
                 .foregroundStyle(habitColor)
-                .frame(width: compact ? 40 : 44, height: compact ? 40 : 44)
+                .frame(width: compact ? 38 : 42, height: compact ? 38 : 42)
                 .background(habitColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
                 .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: compact ? 4 : 6) {
+            VStack(alignment: .leading, spacing: compact ? 2 : 3) {
                 Text(habit.title)
                     .font(.headline)
                     .foregroundStyle(.primary)
@@ -59,39 +59,6 @@ struct HabitRowView: View {
                         .fixedSize(horizontal: false, vertical: !compact)
                 }
 
-                if showsActiveStatus {
-                    Label(
-                        habit.isActive ? "有効" : "お休み中",
-                        systemImage: habit.isActive ? "checkmark.circle.fill" : "pause.circle.fill"
-                    )
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(habit.isActive ? habitColor : .secondary)
-                }
-
-                if let isCompleted {
-                    Label(achievement?.title ?? (isCompleted ? "完了" : "未完了"), systemImage: isCompleted ? "checkmark.circle" : "circle")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(isCompleted ? .primary : habitColor)
-                }
-
-                if showsExecutionTime, let executionTime {
-                    Label(executionTime, systemImage: "clock")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
-                if showsSchedule, let scheduleText {
-                    Label(scheduleText, systemImage: "calendar.badge.clock")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
-                if let streakCount {
-                    Label("継続\(streakCount)日", systemImage: "flame")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(habitColor)
-                }
-
                 if !achievementMemo.isEmpty {
                     Text(achievementMemo)
                         .font(.caption)
@@ -102,15 +69,50 @@ struct HabitRowView: View {
 
             }
 
-            Spacer(minLength: 8)
+            Spacer(minLength: 6)
+
+            trailingInfo
 
         }
-        .padding(compact ? 12 : 16)
-        .background(AppTheme.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 18))
+        .padding(compact ? 10 : 12)
+        .polishedCard(cornerRadius: 18)
+        .overlay(alignment: .leading) {
+            RoundedRectangle(cornerRadius: 3)
+                .fill(habitColor.opacity(0.55))
+                .frame(width: 3)
+                .padding(.vertical, 14)
+        }
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilitySummary)
+    }
+
+    private var trailingInfo: some View {
+        VStack(alignment: .trailing, spacing: 3) {
+            if showsActiveStatus {
+                Label(
+                    habit.isActive ? "有効" : "お休み中",
+                    systemImage: habit.isActive ? "checkmark.circle.fill" : "pause.circle.fill"
+                )
+            }
+            if let isCompleted {
+                Label(achievement?.title ?? (isCompleted ? "完了" : "未完了"), systemImage: isCompleted ? "checkmark.circle" : "circle")
+            }
+            if showsExecutionTime, let executionTime {
+                Label(executionTime, systemImage: "clock")
+            }
+            if showsSchedule, let scheduleText {
+                Label(scheduleText, systemImage: "calendar.badge.clock")
+            }
+            if let streakCount {
+                Label("継続\(streakCount)日", systemImage: "flame")
+            }
+        }
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(habitColor)
+        .lineLimit(1)
+        .minimumScaleFactor(0.8)
+        .frame(maxWidth: compact ? 112 : 170, alignment: .trailing)
     }
 
     private var accessibilitySummary: String {

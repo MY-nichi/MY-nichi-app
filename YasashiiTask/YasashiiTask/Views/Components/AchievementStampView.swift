@@ -63,11 +63,16 @@ struct AchievementFaceIcon: View {
     private var face: some View {
         ZStack {
             eyes
+            cheeks
             if achievement == .rest {
                 Text("Zz")
                     .font(.system(size: iconSize * 0.2, weight: .bold, design: .rounded))
                     .foregroundStyle(achievement.color)
                     .offset(x: iconSize * 0.18, y: -iconSize * 0.18)
+                AchievementMouthShape(achievement: achievement)
+                    .stroke(achievement.color, style: StrokeStyle(lineWidth: max(1.2, iconSize * 0.03), lineCap: .round))
+                    .frame(width: iconSize * 0.22, height: iconSize * 0.12)
+                    .offset(y: iconSize * 0.17)
             } else {
                 AchievementMouthShape(achievement: achievement)
                     .stroke(achievement.color, style: StrokeStyle(lineWidth: max(1.4, iconSize * 0.036), lineCap: .round))
@@ -75,6 +80,18 @@ struct AchievementFaceIcon: View {
                     .offset(y: iconSize * 0.12)
             }
         }
+    }
+
+    private var cheeks: some View {
+        HStack(spacing: iconSize * 0.42) {
+            Circle()
+                .fill(achievement.color.opacity(0.18))
+            Circle()
+                .fill(achievement.color.opacity(0.18))
+        }
+        .frame(width: iconSize * 0.095, height: iconSize * 0.095)
+        .offset(y: iconSize * 0.05)
+        .opacity(achievement == .needsPractice ? 0.45 : 1)
     }
 
     private var brows: some View {
@@ -105,10 +122,19 @@ struct AchievementFaceIcon: View {
                 AchievementRestEyeShape()
                     .stroke(achievement.color, style: StrokeStyle(lineWidth: max(1.4, iconSize * 0.034), lineCap: .round))
                     .frame(width: iconSize * 0.14, height: iconSize * 0.07)
-            } else if achievement == .excellent || achievement == .needsPractice || achievement == .achieved {
+            } else if achievement == .excellent {
                 AchievementHappyEyeShape()
                     .stroke(achievement.color, style: StrokeStyle(lineWidth: max(1.4, iconSize * 0.034), lineCap: .round))
                     .frame(width: iconSize * 0.13, height: iconSize * 0.08)
+            } else if achievement == .achieved {
+                Circle()
+                    .fill(achievement.color)
+                    .frame(width: iconSize * 0.075, height: iconSize * 0.075)
+                    .overlay(alignment: .topTrailing) {
+                        Circle()
+                            .fill(.white.opacity(0.85))
+                            .frame(width: iconSize * 0.025, height: iconSize * 0.025)
+                    }
             } else {
                 Circle()
                     .fill(achievement.color)
@@ -169,13 +195,17 @@ private struct AchievementMouthShape: Shape {
                 control: CGPoint(x: rect.midX, y: rect.maxY * 0.78)
             )
         case .achieved:
-            path.move(to: CGPoint(x: rect.minX + rect.width * 0.2, y: rect.midY))
+            path.move(to: CGPoint(x: rect.minX + rect.width * 0.14, y: rect.midY - rect.height * 0.04))
             path.addQuadCurve(
-                to: CGPoint(x: rect.maxX - rect.width * 0.2, y: rect.midY),
-                control: CGPoint(x: rect.midX, y: rect.maxY * 0.72)
+                to: CGPoint(x: rect.maxX - rect.width * 0.14, y: rect.midY - rect.height * 0.04),
+                control: CGPoint(x: rect.midX, y: rect.maxY * 0.96)
             )
         case .rest:
-            break
+            path.move(to: CGPoint(x: rect.minX + rect.width * 0.22, y: rect.midY))
+            path.addQuadCurve(
+                to: CGPoint(x: rect.maxX - rect.width * 0.22, y: rect.midY),
+                control: CGPoint(x: rect.midX, y: rect.maxY * 0.68)
+            )
         }
         return path
     }
@@ -186,7 +216,6 @@ struct AchievementPickerSheet: View {
     let cardTitle: String
     let selectedAchievement: TaskAchievement?
     let memo: String
-    var showsNavigationTitle = true
     let onSelect: (TaskAchievement?, String) -> Void
     @State private var note: String
     @State private var pendingAchievement: TaskAchievement?
@@ -195,92 +224,98 @@ struct AchievementPickerSheet: View {
         cardTitle: String,
         selectedAchievement: TaskAchievement?,
         memo: String = "",
-        showsNavigationTitle: Bool = true,
         onSelect: @escaping (TaskAchievement?, String) -> Void
     ) {
         self.cardTitle = cardTitle
         self.selectedAchievement = selectedAchievement
         self.memo = memo
-        self.showsNavigationTitle = showsNavigationTitle
         self.onSelect = onSelect
         _note = State(initialValue: memo)
         _pendingAchievement = State(initialValue: selectedAchievement)
     }
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 28) {
-                VStack(spacing: 6) {
-                    Text(cardTitle).font(.title2.bold())
-                    Text("今日はどのくらいできましたか？")
-                        .foregroundStyle(.secondary)
-                }
-                .multilineTextAlignment(.center)
+        VStack(spacing: 24) {
+            ZStack {
+                Text("できばえスタンプ")
+                    .font(.headline.bold())
+                    .lineLimit(1)
 
-                HStack(alignment: .top, spacing: 18) {
-                    ForEach(TaskAchievement.allCases) { achievement in
-                        Button {
-                            pendingAchievement = achievement
-                        } label: {
-                            AchievementStampView(
-                                achievement: achievement,
-                                isSelected: pendingAchievement == achievement
-                            )
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("今日のひとこと")
-                        .font(.subheadline.bold())
-                    TextField("任意で短く残す", text: $note, axis: .vertical)
-                        .lineLimit(1...3)
-                        .textFieldStyle(.roundedBorder)
-                        .onChange(of: note) { _, newValue in
-                            if newValue.count > 80 {
-                                note = String(newValue.prefix(80))
-                            }
-                        }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                if selectedAchievement != nil {
-                    Button("未完了に戻す", role: .destructive) {
-                        onSelect(nil, "")
-                        dismiss()
-                    }
-                }
-
-                Button {
-                    saveSelection()
-                } label: {
-                    Text("保存")
-                        .fontWeight(.semibold)
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(pendingAchievement == nil)
-
-                Spacer()
-            }
-            .padding(24)
-            .navigationTitle(showsNavigationTitle ? "できばえスタンプ" : "")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
+                HStack {
                     Button("キャンセル") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("保存") {
-                        saveSelection()
-                    }
-                    .fontWeight(.semibold)
-                    .disabled(pendingAchievement == nil)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(AppTheme.tint)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(.white.opacity(0.82), in: Capsule())
+                        .fixedSize(horizontal: true, vertical: false)
+                    Spacer()
                 }
             }
+
+            VStack(spacing: 6) {
+                Text(cardTitle)
+                    .font(.title3.bold())
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text("今日はどのくらいできましたか？")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            .multilineTextAlignment(.center)
+
+            HStack(alignment: .top, spacing: 18) {
+                ForEach(TaskAchievement.allCases) { achievement in
+                    Button {
+                        pendingAchievement = achievement
+                    } label: {
+                        AchievementStampView(
+                            achievement: achievement,
+                            isSelected: pendingAchievement == achievement
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text("今日のひとこと")
+                    .font(.subheadline.bold())
+                TextField("任意で短く残す", text: $note, axis: .vertical)
+                    .lineLimit(1...3)
+                    .textFieldStyle(.roundedBorder)
+                    .onChange(of: note) { _, newValue in
+                        if newValue.count > 80 {
+                            note = String(newValue.prefix(80))
+                        }
+                    }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            if selectedAchievement != nil {
+                Button("未完了に戻す", role: .destructive) {
+                    onSelect(nil, "")
+                    dismiss()
+                }
+            }
+
+            Button {
+                saveSelection()
+            } label: {
+                Text("保存")
+                    .fontWeight(.semibold)
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .disabled(pendingAchievement == nil)
+
+            Spacer(minLength: 0)
         }
-        .presentationDetents([.height(430)])
+        .padding(24)
+        .presentationDetents([.height(500)])
     }
 
     private func saveSelection() {

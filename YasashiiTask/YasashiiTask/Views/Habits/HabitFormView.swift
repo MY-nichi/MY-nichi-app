@@ -165,7 +165,7 @@ struct HabitFormView: View {
                 }
             }
             .scrollContentBackground(.hidden)
-            .background(AppTheme.screenBackground)
+            .appScreenBackground()
             .navigationTitle(viewModel.navigationTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

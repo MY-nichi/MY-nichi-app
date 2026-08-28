@@ -37,7 +37,7 @@ struct TodayView: View {
                 }
                 .padding(16)
             }
-            .background(AppTheme.screenBackground)
+            .appScreenBackground()
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -106,36 +106,45 @@ struct TodayView: View {
     }
 
     private var dateHeader: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            if let displayName {
-                Text("\(displayName)さん")
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(AppTheme.tint)
-            } else {
-                Text("今日")
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(AppTheme.tint)
+        HStack(spacing: 12) {
+            Image(systemName: "leaf.circle.fill")
+                .font(.system(size: 38))
+                .foregroundStyle(AppTheme.tint, AppTheme.softGreen)
+            VStack(alignment: .leading, spacing: 4) {
+                if let displayName {
+                    Text("\(displayName)さん")
+                        .font(.title3.weight(.bold))
+                        .foregroundStyle(AppTheme.tint)
+                } else {
+                    Text("今日")
+                        .font(.title3.weight(.bold))
+                        .foregroundStyle(AppTheme.tint)
+                }
+                Text(today.formatted(
+                    .dateTime
+                        .year()
+                        .month(.wide)
+                        .day()
+                        .weekday(.wide)
+                        .locale(Locale(identifier: "ja_JP"))
+                ))
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            Text(today.formatted(
-                .dateTime
-                    .year()
-                    .month(.wide)
-                    .day()
-                    .weekday(.wide)
-                    .locale(Locale(identifier: "ja_JP"))
-            ))
-                .font(.headline.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
         }
+        .padding(.horizontal, 4)
+        .padding(.top, 4)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("今日、\(today.formatted(date: .long, time: .omitted))")
     }
 
     private var habitsSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("習慣")
+            Label("習慣", systemImage: "leaf.fill")
                 .font(.title2.bold())
+                .foregroundStyle(AppTheme.tint)
             if todayHabits.isEmpty {
                 emptyMessage("今日の習慣はありません", icon: "leaf")
             } else {
@@ -163,8 +172,9 @@ struct TodayView: View {
 
     private var cardsSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("タスク")
+            Label("タスク", systemImage: "checkmark.square.fill")
                 .font(.title2.bold())
+                .foregroundStyle(AppTheme.tint)
             if todayCards.isEmpty {
                 emptyMessage("今日のタスクはありません", icon: "rectangle.stack")
             } else {
@@ -176,7 +186,8 @@ struct TodayView: View {
                         showsExecutionTime: true,
                         strikesThroughCompletedTitle: false,
                         usesSimpleCompletionStatus: true,
-                        achievementMemo: viewModel.memo(for: card, date: today)
+                        achievementMemo: viewModel.memo(for: card, date: today),
+                        compact: true
                     ) {
                         selectedCardID = card.id
                     }
@@ -191,7 +202,7 @@ struct TodayView: View {
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(18)
-            .background(AppTheme.cardBackground, in: RoundedRectangle(cornerRadius: 16))
+            .polishedCard(cornerRadius: 16)
     }
 
     private var nextIndependentCardSortOrder: Int {

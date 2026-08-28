@@ -9,6 +9,7 @@ struct TaskCardRowView: View {
     var strikesThroughCompletedTitle = true
     var usesSimpleCompletionStatus = false
     var achievementMemo = ""
+    var compact = false
     var onToggleCompletion: (() -> Void)?
 
     private var cardColor: Color {
@@ -39,56 +40,47 @@ struct TaskCardRowView: View {
     }
 
     private var rowContent: some View {
-        HStack(alignment: .top, spacing: 14) {
+        HStack(alignment: .center, spacing: compact ? 10 : 12) {
             cardIcon
                 .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: compact ? 2 : 3) {
                 Text(card.title)
                     .font(.headline)
                     .foregroundStyle(.primary)
                     .strikethrough(card.isCompleted && strikesThroughCompletedTitle)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(compact ? 1 : nil)
+                    .fixedSize(horizontal: false, vertical: !compact)
 
                 if !card.detail.isEmpty {
                     Text(card.detail)
-                        .font(.subheadline)
+                        .font(compact ? .caption : .subheadline)
                         .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(compact ? 1 : nil)
+                        .fixedSize(horizontal: false, vertical: !compact)
                 }
-
-                HStack(spacing: 10) {
-                    Label(
-                        achievement?.title ?? (usesSimpleCompletionStatus ? (card.isCompleted ? "完了" : "未完了") : (card.isCompleted ? "完了" : "未完了")),
-                        systemImage: isCompletedStatus ? "checkmark.circle" : "circle"
-                    )
-                    if showsExecutionTime, let executionTime {
-                        Label(executionTime, systemImage: "clock")
-                    }
-                    if showsDueDate, let dueDate = card.dueDate {
-                        Label(dueDate.formatted(date: .numeric, time: .omitted), systemImage: "calendar")
-                    }
-                    if showsSchedule, let scheduleText {
-                        Label(scheduleText, systemImage: "calendar.badge.clock")
-                    }
-                }
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(isCompletedStatus ? .primary : cardColor)
 
                 if !achievementMemo.isEmpty {
                     Text(achievementMemo)
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(compact ? 1 : 2)
+                        .fixedSize(horizontal: false, vertical: !compact)
                 }
             }
 
-            Spacer(minLength: 8)
+            Spacer(minLength: 6)
+
+            trailingInfo
         }
-        .padding(16)
-        .background(AppTheme.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 18))
+        .padding(compact ? 10 : 12)
+        .polishedCard(cornerRadius: 18)
+        .overlay(alignment: .leading) {
+            RoundedRectangle(cornerRadius: 3)
+                .fill(cardColor.opacity(0.55))
+                .frame(width: 3)
+                .padding(.vertical, 14)
+        }
         .contentShape(Rectangle())
     }
 
@@ -96,15 +88,38 @@ struct TaskCardRowView: View {
         Group {
             if let achievement {
                 AchievementStampView(achievement: achievement, compact: true)
-                    .frame(width: 44, height: 44)
+                    .frame(width: compact ? 36 : 40, height: compact ? 36 : 40)
             } else {
                 Image(systemName: card.iconName)
-                    .font(.title2)
+                    .font(compact ? .title3 : .title2)
                     .foregroundStyle(cardColor)
-                    .frame(width: 44, height: 44)
-                    .background(cardColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
+                    .frame(width: compact ? 38 : 42, height: compact ? 38 : 42)
+                    .background(cardColor.opacity(0.18), in: RoundedRectangle(cornerRadius: 14))
             }
         }
+    }
+
+    private var trailingInfo: some View {
+        VStack(alignment: .trailing, spacing: 3) {
+            Label(
+                achievement?.title ?? (usesSimpleCompletionStatus ? (card.isCompleted ? "完了" : "未完了") : (card.isCompleted ? "完了" : "未完了")),
+                systemImage: isCompletedStatus ? "checkmark.circle" : "circle"
+            )
+            if showsExecutionTime, let executionTime {
+                Label(executionTime, systemImage: "clock")
+            }
+            if showsDueDate, let dueDate = card.dueDate {
+                Label(dueDate.formatted(date: .numeric, time: .omitted), systemImage: "calendar")
+            }
+            if showsSchedule, let scheduleText {
+                Label(scheduleText, systemImage: "calendar.badge.clock")
+            }
+        }
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(cardColor)
+        .lineLimit(1)
+        .minimumScaleFactor(0.8)
+        .frame(maxWidth: compact ? 112 : 170, alignment: .trailing)
     }
 
     private var accessibilitySummary: String {

@@ -35,7 +35,7 @@ struct TimelineView: View {
                 }
             }
             .environment(\.editMode, $editMode)
-            .background(AppTheme.screenBackground)
+            .appScreenBackground()
         }
         .task {
             while !Task.isCancelled {
