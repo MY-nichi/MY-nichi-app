@@ -92,31 +92,31 @@ struct ProgressDashboardView: View {
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 10) {
-                        HStack(spacing: 8) {
+                        HStack(spacing: 4) {
                             Text("習慣")
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(.secondary)
-                                .frame(width: 104, alignment: .leading)
+                                .frame(width: 78, alignment: .leading)
                             ForEach(reflectionDates, id: \.self) { date in
                                 Text(dayLabel(for: date))
                                     .font(.caption2.weight(.semibold))
                                     .foregroundStyle(.secondary)
-                                    .frame(width: 34)
+                                    .frame(width: 30)
                             }
                         }
                         ForEach(reflectedHabits) { habit in
-                            HStack(spacing: 8) {
+                            HStack(spacing: 4) {
                                 Text(habit.title)
                                     .font(.caption.weight(.semibold))
                                     .lineLimit(1)
-                                    .frame(width: 104, alignment: .leading)
+                                    .frame(width: 78, alignment: .leading)
                                 ForEach(reflectionDates, id: \.self) { date in
                                     reflectionStamp(for: habit, on: date)
                                 }
                             }
                         }
                     }
-                    .padding(16)
+                    .padding(12)
                 }
                 .polishedCard(cornerRadius: 18)
             }
@@ -185,15 +185,15 @@ struct ProgressDashboardView: View {
 
         return Group {
             if let achievement {
-                AchievementFaceIcon(achievement: achievement, compact: true, size: 30)
+                AchievementFaceIcon(achievement: achievement, compact: true, size: 26)
             } else {
                 Text("・")
-                    .font(.title3)
-                    .frame(width: 30, height: 30)
+                    .font(.subheadline)
+                    .frame(width: 26, height: 26)
                     .background(AppTheme.chipBackground.opacity(0.14), in: Circle())
             }
         }
-        .frame(width: 34, height: 34)
+        .frame(width: 30, height: 30)
         .accessibilityLabel(achievement?.title ?? "記録なし")
     }
 

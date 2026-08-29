@@ -29,7 +29,7 @@ struct TodayView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 22) {
+                LazyVStack(alignment: .leading, spacing: 16) {
                     dateHeader
                     TodaySummaryView(summary: viewModel.summary(for: todayCards, date: today), compact: true)
                     habitsSection
@@ -40,26 +40,6 @@ struct TodayView: View {
             .appScreenBackground()
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    NavigationLink {
-                        ProgressDashboardView()
-                    } label: {
-                        Label("進捗を見る", systemImage: "chart.bar")
-                    }
-                    .accessibilityHint("進捗と振り返りの画面を開きます")
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Menu("追加", systemImage: "plus") {
-                        Button("習慣を追加", systemImage: "leaf") {
-                            isCreatingHabit = true
-                        }
-                        Button("タスクを追加", systemImage: "rectangle.stack") {
-                            isCreatingCard = true
-                        }
-                    }
-                }
-            }
         }
         .overlay {
             if viewModel.recentlyCompletedCardID != nil {
@@ -106,33 +86,73 @@ struct TodayView: View {
     }
 
     private var dateHeader: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "leaf.circle.fill")
-                .font(.system(size: 38))
-                .foregroundStyle(AppTheme.tint, AppTheme.softGreen)
-            VStack(alignment: .leading, spacing: 4) {
-                if let displayName {
-                    Text("\(displayName)さん")
-                        .font(.title3.weight(.bold))
-                        .foregroundStyle(AppTheme.tint)
-                } else {
-                    Text("今日")
-                        .font(.title3.weight(.bold))
-                        .foregroundStyle(AppTheme.tint)
+        VStack(alignment: .leading, spacing: 14) {
+            ZStack {
+                HStack {
+                    NavigationLink {
+                        ProgressDashboardView()
+                    } label: {
+                        Image(systemName: "chart.bar.fill")
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(AppTheme.tint)
+                            .frame(width: 46, height: 46)
+                            .background(.white.opacity(0.72), in: Circle())
+                    }
+                    .accessibilityLabel("進捗を見る")
+                    .accessibilityHint("進捗と振り返りの画面を開きます")
+
+                    Spacer()
+
+                    Menu {
+                        Button("習慣を追加", systemImage: "leaf") {
+                            isCreatingHabit = true
+                        }
+                        Button("タスクを追加", systemImage: "rectangle.stack") {
+                            isCreatingCard = true
+                        }
+                    } label: {
+                        Image(systemName: "plus")
+                            .font(.title2.weight(.semibold))
+                            .foregroundStyle(AppTheme.tint)
+                            .frame(width: 46, height: 46)
+                            .background(.white.opacity(0.72), in: Circle())
+                    }
+                    .accessibilityLabel("追加")
                 }
-                Text(today.formatted(
-                    .dateTime
-                        .year()
-                        .month(.wide)
-                        .day()
-                        .weekday(.wide)
-                        .locale(Locale(identifier: "ja_JP"))
-                ))
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+
+                HStack(spacing: 5) {
+                    Text("今日")
+                    Image(systemName: "chevron.down")
+                        .font(.caption.weight(.bold))
+                }
+                .font(.title3.weight(.bold))
+                .foregroundStyle(.primary)
             }
-            Spacer(minLength: 0)
+
+            HStack(spacing: 12) {
+                Image(systemName: "leaf.circle.fill")
+                    .font(.system(size: 34))
+                    .foregroundStyle(AppTheme.tint, AppTheme.softGreen)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    if let displayName {
+                        Text("\(displayName)さん")
+                            .font(.title3.weight(.bold))
+                            .foregroundStyle(AppTheme.tint)
+                    }
+                    Text(today.formatted(
+                        .dateTime
+                            .year()
+                            .month(.wide)
+                            .day()
+                            .weekday(.wide)
+                            .locale(Locale(identifier: "ja_JP"))
+                    ))
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
         }
         .padding(.horizontal, 4)
         .padding(.top, 4)

@@ -55,11 +55,13 @@ private struct SettingsForm: View {
             } footer: {
                 Text("入力した名前は、この端末内だけに保存します。")
             }
+            .settingsCardRows()
 
             Section("リマインダー") {
                 Toggle("振動", isOn: $settings.hapticsEnabled)
                     .onChange(of: settings.hapticsEnabled) { _, _ in save() }
             }
+            .settingsCardRows()
 
             Section("データ") {
                 NavigationLink {
@@ -68,12 +70,14 @@ private struct SettingsForm: View {
                     Label("バックアップ・復元", systemImage: "externaldrive")
                 }
             }
+            .settingsCardRows()
 
             Section("アプリ情報") {
                 LabeledContent("アプリ名", value: "MY-nichi")
                 LabeledContent("データ保存", value: "この端末内")
                 LabeledContent("バージョン", value: "1.0.0")
             }
+            .settingsCardRows()
         }
         .scrollContentBackground(.hidden)
         .appScreenBackground()
@@ -100,6 +104,14 @@ private struct SettingsForm: View {
         save()
         isNameFocused = false
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+}
+
+private extension View {
+    func settingsCardRows() -> some View {
+        self
+            .listRowBackground(AppTheme.cardBackground)
+            .listRowSeparatorTint(AppTheme.cardStroke.opacity(0.65))
     }
 }
 

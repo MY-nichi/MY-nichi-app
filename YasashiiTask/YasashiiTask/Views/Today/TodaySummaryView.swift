@@ -41,11 +41,12 @@ struct TodaySummaryView: View {
             }
         }
         .padding(compact ? 14 : 18)
-        .background(AppTheme.headerGradient, in: RoundedRectangle(cornerRadius: 22))
+        .background(AppTheme.cardBackground, in: RoundedRectangle(cornerRadius: 22))
         .overlay {
             RoundedRectangle(cornerRadius: 22)
                 .stroke(AppTheme.cardStroke.opacity(0.75), lineWidth: 1.2)
         }
+        .shadow(color: Color.white.opacity(0.72), radius: 1, x: -1, y: -1)
         .shadow(color: AppTheme.cardShadow, radius: 16, x: 0, y: 8)
     }
 

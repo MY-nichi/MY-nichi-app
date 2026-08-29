@@ -133,6 +133,10 @@ struct HabitFormView: View {
 
                 Section("期間と目標") {
                     JapaneseDatePickerRow(title: "開始日", selection: $viewModel.startDate)
+                    Toggle("リマインダー", isOn: $viewModel.hasReminder)
+                    if viewModel.hasReminder {
+                        DatePicker("通知時刻", selection: $viewModel.reminderTime, displayedComponents: .hourAndMinute)
+                    }
                     Toggle("終了日", isOn: $viewModel.hasEndDate)
                     if viewModel.hasEndDate {
                         JapaneseDatePickerRow(title: "終了日の日付", selection: $viewModel.endDate)
@@ -147,13 +151,6 @@ struct HabitFormView: View {
                         Stepper("目標：\(viewModel.targetDays)日", value: $viewModel.targetDays, in: 1...3650)
                     }
                     Toggle("習慣を有効", isOn: $viewModel.isActive)
-                }
-
-                Section("リマインダー") {
-                    Toggle("リマインダー", isOn: $viewModel.hasReminder)
-                    if viewModel.hasReminder {
-                        DatePicker("通知時刻", selection: $viewModel.reminderTime, displayedComponents: .hourAndMinute)
-                    }
                 }
 
                 if viewModel.habit != nil {
