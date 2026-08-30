@@ -7,6 +7,7 @@ struct IndependentTaskListView: View {
     @State private var viewModel = TaskCardsViewModel()
     @State private var cardBeingEdited: TaskCard?
     @State private var isCreatingCard = false
+    @AppStorage(AdRemovalStore.adsRemovedDefaultsKey) private var adsRemoved = false
 
     private var cards: [TaskCard] {
         viewModel.sortedCards(from: allCards.filter { $0.habit == nil })
@@ -44,6 +45,7 @@ struct IndependentTaskListView: View {
                                 }
                             }
                         }
+                        adMobListFooter
                     }
                     .listStyle(.plain)
                     .scrollContentBackground(.hidden)
@@ -83,6 +85,22 @@ struct IndependentTaskListView: View {
             } message: {
                 Text(viewModel.errorMessage ?? "不明なエラーです。")
             }
+        }
+    }
+
+    @ViewBuilder
+    private var adMobListFooter: some View {
+        if !adsRemoved {
+            HStack {
+                Spacer()
+                AdMobBannerView()
+                    .frame(width: 320, height: 50)
+                Spacer()
+            }
+            .padding(.vertical, 10)
+            .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 18, trailing: 0))
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
         }
     }
 

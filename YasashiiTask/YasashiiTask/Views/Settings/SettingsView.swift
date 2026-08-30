@@ -38,6 +38,8 @@ struct SettingsView: View {
 private struct SettingsForm: View {
     @Bindable var settings: AppSettings
     let save: () -> Void
+    @StateObject private var adRemovalStore = AdRemovalStore()
+    @AppStorage(AdRemovalStore.adsRemovedDefaultsKey) private var adsRemoved = false
     @FocusState private var isNameFocused: Bool
 
     var body: some View {
@@ -78,6 +80,36 @@ private struct SettingsForm: View {
                 LabeledContent("バージョン", value: "1.0.0")
             }
             .settingsCardRows()
+
+            Section("広告") {
+                if adRemovalStore.isAdsRemoved {
+                    Label("広告非表示が有効です", systemImage: "checkmark.seal.fill")
+                } else {
+                    Button(adRemovalStore.purchaseTitle) {
+                        Task { await adRemovalStore.purchase() }
+                    }
+                    .disabled(adRemovalStore.isWorking)
+
+                    Button("購入を復元") {
+                        Task { await adRemovalStore.restorePurchases() }
+                    }
+                    .disabled(adRemovalStore.isWorking)
+                }
+            }
+            .settingsCardRows()
+
+            if !adsRemoved {
+                Section {
+                    HStack {
+                        Spacer()
+                        AdMobBannerView()
+                            .frame(width: 320, height: 50)
+                        Spacer()
+                    }
+                    .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
+                }
+                .settingsCardRows()
+            }
         }
         .scrollContentBackground(.hidden)
         .appScreenBackground()
@@ -89,6 +121,21 @@ private struct SettingsForm: View {
                 }
             }
         }
+        .task {
+            await adRemovalStore.load()
+        }
+        .alert("購入できませんでした", isPresented: purchaseMessageBinding) {
+            Button("OK") { adRemovalStore.message = nil }
+        } message: {
+            Text(adRemovalStore.message ?? "不明なエラーです。")
+        }
+    }
+
+    private var purchaseMessageBinding: Binding<Bool> {
+        Binding(
+            get: { adRemovalStore.message != nil },
+            set: { if !$0 { adRemovalStore.message = nil } }
+        )
     }
 
     private var displayNameBinding: Binding<String> {

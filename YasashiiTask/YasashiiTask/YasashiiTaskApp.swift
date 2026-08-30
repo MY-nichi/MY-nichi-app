@@ -7,10 +7,15 @@
 
 import SwiftUI
 import SwiftData
+import GoogleMobileAds
 
 @main
 struct YasashiiTaskApp: App {
     private let dataStore = AppDataStore.make()
+
+    init() {
+        MobileAds.shared.start()
+    }
 
     var body: some Scene {
         WindowGroup {

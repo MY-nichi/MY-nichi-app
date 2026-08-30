@@ -7,6 +7,7 @@ struct HabitListView: View {
     @State private var viewModel = HabitsViewModel()
     @State private var habitBeingEdited: Habit?
     @State private var isCreatingHabit = false
+    @AppStorage(AdRemovalStore.adsRemovedDefaultsKey) private var adsRemoved = false
 
     private var visibleHabits: [Habit] {
         viewModel.visibleHabits(from: habits)
@@ -113,10 +114,27 @@ struct HabitListView: View {
                     }
                 }
             }
+            adMobListFooter
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .accessibilityLabel("習慣一覧")
+    }
+
+    @ViewBuilder
+    private var adMobListFooter: some View {
+        if !adsRemoved {
+            HStack {
+                Spacer()
+                AdMobBannerView()
+                    .frame(width: 320, height: 50)
+                Spacer()
+            }
+            .padding(.vertical, 10)
+            .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 18, trailing: 0))
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
+        }
     }
 }
 

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D7AD00013010000100187AEC /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = D7AD00023010000100187AEC /* GoogleMobileAds */; };
 		D7AF1007300C000100187AEC /* YasashiiTaskWidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = D7AF1001300C000100187AEC /* YasashiiTaskWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -83,6 +84,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D7AD00013010000100187AEC /* GoogleMobileAds in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -154,6 +156,7 @@
 			);
 			name = YasashiiTask;
 			packageProductDependencies = (
+				D7AD00023010000100187AEC /* GoogleMobileAds */,
 			);
 			productName = YasashiiTask;
 			productReference = D7AEECF7300B53D300187AEC /* YasashiiTask.app */;
@@ -275,6 +278,9 @@
 			);
 			mainGroup = D7AEECEE300B53D300187AEC;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				D7AD00033010000100187AEC /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D7AEECF8300B53D300187AEC /* Products */;
 			projectDirPath = "";
@@ -733,6 +739,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		D7AD00033010000100187AEC /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		D7AD00023010000100187AEC /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D7AD00033010000100187AEC /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = D7AEECEF300B53D300187AEC /* Project object */;
 }

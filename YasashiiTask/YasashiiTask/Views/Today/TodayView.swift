@@ -11,6 +11,7 @@ struct TodayView: View {
     @State private var selectedCardID: UUID?
     @State private var isCreatingHabit = false
     @State private var isCreatingCard = false
+    @AppStorage(AdRemovalStore.adsRemovedDefaultsKey) private var adsRemoved = false
     private let today = Date.now
 
     private var todayHabits: [Habit] {
@@ -34,6 +35,7 @@ struct TodayView: View {
                     TodaySummaryView(summary: viewModel.summary(for: todayCards, date: today), compact: true)
                     habitsSection
                     cardsSection
+                    adMobFooter
                 }
                 .padding(16)
             }
@@ -213,6 +215,20 @@ struct TodayView: View {
                     }
                 }
             }
+        }
+    }
+
+    @ViewBuilder
+    private var adMobFooter: some View {
+        if !adsRemoved {
+            HStack {
+                Spacer()
+                AdMobBannerView()
+                    .frame(width: 320, height: 50)
+                Spacer()
+            }
+            .padding(.top, 6)
+            .padding(.bottom, 10)
         }
     }
 
