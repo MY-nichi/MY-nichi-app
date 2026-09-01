@@ -8,8 +8,10 @@ struct TaskCardFormView: View {
     @Query private var settings: [AppSettings]
     @State private var viewModel: TaskCardFormViewModel
     @State private var isDeleteConfirmationPresented = false
+    @State private var isCustomIconInputVisible = false
+    @FocusState private var isCustomIconFieldFocused: Bool
 
-    private let icons = ["rectangle.stack", "checkmark.square", "book", "pencil", "figure.walk", "music.note", "heart", "briefcase"]
+    private let icons = ["rectangle.stack", "checkmark.square", "book", "pencil", "figure.walk", "music.note", "paintpalette", "heart", "briefcase", "sparkles"]
     private let colors = ["#10B981", "#60A5FA", "#06B6D4", "#84CC16", "#FBBF24", "#F97316", "#EF4444", "#F472B6", "#A78BFA", "#64748B"]
     private let weekdays = [(1, "日"), (2, "月"), (3, "火"), (4, "水"), (5, "木"), (6, "金"), (7, "土")]
 
@@ -96,54 +98,75 @@ struct TaskCardFormView: View {
                 }
 
                 Section {
-                    Menu {
-                        ForEach(icons, id: \.self) { icon in
-                            Button {
-                                viewModel.iconName = icon
-                            } label: {
-                                Label(iconName(icon), systemImage: icon)
-                            }
-                        }
-                    } label: {
-                        pickerRow(
-                            title: "アイコン",
-                            value: iconName(viewModel.iconName),
-                            systemImage: viewModel.iconName
-                        )
-                    }
-                    .transaction { $0.animation = nil }
-
-                    Menu {
-                        ForEach(colors, id: \.self) { color in
-                            Button {
-                                viewModel.colorHex = color
-                            } label: {
-                                Label {
-                                    Text(colorName(color))
-                                } icon: {
-                                    Image(uiImage: colorCircleImage(color))
-                                        .renderingMode(.original)
+                    VStack(spacing: 0) {
+                        Menu {
+                            ForEach(icons, id: \.self) { icon in
+                                Button {
+                                    viewModel.iconName = icon
+                                    isCustomIconInputVisible = icon == "sparkles"
+                                    if icon == "sparkles" {
+                                        isCustomIconFieldFocused = true
+                                    }
+                                } label: {
+                                    Label(iconName(icon), systemImage: icon)
                                 }
                             }
+                        } label: {
+                            pickerRow(
+                                title: "アイコン",
+                                value: selectedIconDisplayName,
+                                systemImage: viewModel.iconName
+                            )
                         }
-                    } label: {
-                        HStack(spacing: 7) {
-                            Text("カラー")
-                            Spacer()
-                            Circle()
-                                .fill(colorValue(viewModel.colorHex))
-                                .frame(width: 16, height: 16)
-                                .overlay(Circle().stroke(.secondary.opacity(0.35), lineWidth: 1))
-                            Text(colorName(viewModel.colorHex))
-                                .frame(minWidth: 70, alignment: .trailing)
-                            Image(systemName: "chevron.up.chevron.down")
-                                .font(.caption)
+                        .transaction { $0.animation = nil }
+
+                        if viewModel.iconName == "sparkles", isCustomIconInputVisible {
+                            Divider()
+                            TextField("", text: $viewModel.customIconText)
+                                .multilineTextAlignment(.trailing)
+                                .focused($isCustomIconFieldFocused)
+                                .submitLabel(.done)
+                                .onSubmit {
+                                    isCustomIconFieldFocused = false
+                                    isCustomIconInputVisible = false
+                                }
+                                .frame(minHeight: 44)
                         }
-                        .foregroundStyle(.tint)
-                        .frame(minHeight: 44)
-                        .contentShape(Rectangle())
+
+                        Divider()
+                        Menu {
+                            ForEach(colors, id: \.self) { color in
+                                Button {
+                                    viewModel.colorHex = color
+                                } label: {
+                                    Label {
+                                        Text(colorName(color))
+                                    } icon: {
+                                        Image(uiImage: colorCircleImage(color))
+                                            .renderingMode(.original)
+                                    }
+                                }
+                            }
+                        } label: {
+                            HStack(spacing: 7) {
+                                Text("カラー")
+                                Spacer()
+                                Circle()
+                                    .fill(colorValue(viewModel.colorHex))
+                                    .frame(width: 16, height: 16)
+                                    .overlay(Circle().stroke(.secondary.opacity(0.35), lineWidth: 1))
+                                Text(colorName(viewModel.colorHex))
+                                    .frame(minWidth: 70, alignment: .trailing)
+                                Image(systemName: "chevron.up.chevron.down")
+                                    .font(.caption)
+                            }
+                            .foregroundStyle(.tint)
+                            .frame(minHeight: 44)
+                            .contentShape(Rectangle())
+                        }
+                        .transaction { $0.animation = nil }
                     }
-                    .transaction { $0.animation = nil }
+                    .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
                 }
 
                 if viewModel.card != nil {
@@ -235,7 +258,15 @@ struct TaskCardFormView: View {
     }
 
     private func iconName(_ icon: String) -> String {
-        ["rectangle.stack": "タスク", "checkmark.square": "チェック", "book": "読書", "pencil": "学習", "figure.walk": "運動", "music.note": "音楽", "heart": "健康", "briefcase": "仕事"][icon] ?? "アイコン"
+        ["rectangle.stack": "タスク", "checkmark.square": "チェック", "book": "読書", "pencil": "学習", "figure.walk": "運動", "music.note": "音楽", "paintpalette": "趣味", "heart": "健康", "briefcase": "仕事", "sparkles": "その他"][icon] ?? "アイコン"
+    }
+
+    private var selectedIconDisplayName: String {
+        let customText = viewModel.customIconText.trimmingCharacters(in: .whitespacesAndNewlines)
+        if viewModel.iconName == "sparkles", !isCustomIconInputVisible, !customText.isEmpty {
+            return customText
+        }
+        return iconName(viewModel.iconName)
     }
 
     private var hapticsEnabled: Bool {

@@ -33,7 +33,7 @@ struct HabitBackup: Codable {
 
 struct TaskCardBackup: Codable {
     let id: UUID; let habitID: UUID?; let title: String; let detail: String; let memo: String
-    let dueDate: Date?; let startTime: Date?; let endTime: Date?; let priority: String
+    let customIconText: String?; let dueDate: Date?; let startTime: Date?; let endTime: Date?; let priority: String
     let iconName: String; let colorHex: String; let sortOrder: Int; let isCompleted: Bool
     let completedAt: Date?; let repeatRule: String?; let tags: [String]; let createdAt: Date; let updatedAt: Date
     let reminderTime: Date?; let repeatWeekdays: [Int]?
@@ -68,7 +68,7 @@ enum BackupService {
             version: 1,
             exportedAt: exportedAt,
             habits: habits.map { .init(id: $0.id, title: $0.title, detail: $0.detail, category: $0.category, iconName: $0.iconName, customIconText: $0.customIconText, colorHex: $0.colorHex, startDate: $0.startDate, endDate: $0.endDate, activeDays: $0.activeDays, reminderTime: $0.reminderTime, targetCount: $0.targetCount, sortOrder: $0.sortOrder, dailyStartTime: $0.dailyStartTime, dailyEndTime: $0.dailyEndTime, targetMinutes: $0.targetMinutes, targetDays: $0.targetDays, isActive: $0.isActive, isArchived: $0.isArchived, createdAt: $0.createdAt, updatedAt: $0.updatedAt) },
-            cards: cards.map { .init(id: $0.id, habitID: $0.habit?.id, title: $0.title, detail: $0.detail, memo: $0.memo, dueDate: $0.dueDate, startTime: $0.startTime, endTime: $0.endTime, priority: $0.priority, iconName: $0.iconName, colorHex: $0.colorHex, sortOrder: $0.sortOrder, isCompleted: $0.isCompleted, completedAt: $0.completedAt, repeatRule: $0.repeatRule, tags: $0.tags, createdAt: $0.createdAt, updatedAt: $0.updatedAt, reminderTime: $0.reminderTime, repeatWeekdays: $0.repeatWeekdays) },
+            cards: cards.map { .init(id: $0.id, habitID: $0.habit?.id, title: $0.title, detail: $0.detail, memo: $0.memo, customIconText: $0.customIconText, dueDate: $0.dueDate, startTime: $0.startTime, endTime: $0.endTime, priority: $0.priority, iconName: $0.iconName, colorHex: $0.colorHex, sortOrder: $0.sortOrder, isCompleted: $0.isCompleted, completedAt: $0.completedAt, repeatRule: $0.repeatRule, tags: $0.tags, createdAt: $0.createdAt, updatedAt: $0.updatedAt, reminderTime: $0.reminderTime, repeatWeekdays: $0.repeatWeekdays) },
             checklistItems: checklistItems.map { .init(id: $0.id, taskCardID: $0.taskCard?.id, title: $0.title, isCompleted: $0.isCompleted, sortOrder: $0.sortOrder) },
             completionRecords: completionRecords.map { .init(id: $0.id, habitID: $0.habit?.id, taskCardID: $0.taskCard?.id, targetDate: $0.targetDate, completedAt: $0.completedAt, status: $0.status, memo: $0.memo) },
             settings: settings.map { .init(id: $0.id, theme: $0.theme, notificationsEnabled: $0.notificationsEnabled, hapticsEnabled: $0.hapticsEnabled, backupReminderEnabled: $0.backupReminderEnabled, lastBackupDate: $0.lastBackupDate, hasCompletedOnboarding: $0.hasCompletedOnboarding, displayName: $0.displayName) }
@@ -121,7 +121,7 @@ enum BackupService {
 
         var cardsByID: [UUID: TaskCard] = [:]
         for item in package.cards {
-            let card = TaskCard(id: item.id, habit: item.habitID.flatMap { habitsByID[$0] }, title: item.title, detail: item.detail, memo: item.memo, dueDate: item.dueDate, startTime: item.startTime, endTime: item.endTime, priority: item.priority, iconName: item.iconName, colorHex: item.colorHex, sortOrder: item.sortOrder, isCompleted: item.isCompleted, completedAt: item.completedAt, repeatRule: item.repeatRule, repeatWeekdays: item.repeatWeekdays ?? [], reminderTime: item.reminderTime, tags: item.tags, createdAt: item.createdAt, updatedAt: item.updatedAt)
+            let card = TaskCard(id: item.id, habit: item.habitID.flatMap { habitsByID[$0] }, title: item.title, detail: item.detail, memo: item.memo, dueDate: item.dueDate, startTime: item.startTime, endTime: item.endTime, priority: item.priority, iconName: item.iconName, customIconText: item.customIconText, colorHex: item.colorHex, sortOrder: item.sortOrder, isCompleted: item.isCompleted, completedAt: item.completedAt, repeatRule: item.repeatRule, repeatWeekdays: item.repeatWeekdays ?? [], reminderTime: item.reminderTime, tags: item.tags, createdAt: item.createdAt, updatedAt: item.updatedAt)
             context.insert(card)
             cardsByID[item.id] = card
         }
@@ -152,7 +152,7 @@ enum BackupService {
 
         var cardsByID: [UUID: TaskCard] = [:]
         for item in package.cards {
-            let card = TaskCard(id: UUID(), habit: item.habitID.flatMap { habitsByID[$0] }, title: item.title, detail: item.detail, memo: item.memo, dueDate: item.dueDate, startTime: item.startTime, endTime: item.endTime, priority: item.priority, iconName: item.iconName, colorHex: item.colorHex, sortOrder: item.sortOrder, isCompleted: item.isCompleted, completedAt: item.completedAt, repeatRule: item.repeatRule, repeatWeekdays: item.repeatWeekdays ?? [], reminderTime: item.reminderTime, tags: item.tags, createdAt: item.createdAt, updatedAt: item.updatedAt)
+            let card = TaskCard(id: UUID(), habit: item.habitID.flatMap { habitsByID[$0] }, title: item.title, detail: item.detail, memo: item.memo, dueDate: item.dueDate, startTime: item.startTime, endTime: item.endTime, priority: item.priority, iconName: item.iconName, customIconText: item.customIconText, colorHex: item.colorHex, sortOrder: item.sortOrder, isCompleted: item.isCompleted, completedAt: item.completedAt, repeatRule: item.repeatRule, repeatWeekdays: item.repeatWeekdays ?? [], reminderTime: item.reminderTime, tags: item.tags, createdAt: item.createdAt, updatedAt: item.updatedAt)
             context.insert(card)
             cardsByID[item.id] = card
         }

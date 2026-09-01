@@ -25,6 +25,7 @@ final class TaskCardFormViewModel {
     var endTime: Date
     var priority: String
     var iconName: String
+    var customIconText: String
     var colorHex: String
     var repeatRule: String
     var repeatWeekdays: Set<Int>
@@ -53,6 +54,7 @@ final class TaskCardFormViewModel {
         self.endTime = card?.endTime ?? .now
         self.priority = card?.priority ?? "normal"
         self.iconName = card?.iconName ?? "rectangle.stack"
+        self.customIconText = card?.customIconText ?? ""
         self.colorHex = card?.colorHex ?? habit?.colorHex ?? "#10B981"
         let storedRepeatRule = card?.repeatRule ?? "none"
         self.repeatRule = ["none", "weekly", "biweekly", "monthly"].contains(storedRepeatRule) ? storedRepeatRule : "none"
@@ -101,6 +103,7 @@ final class TaskCardFormViewModel {
         target.endTime = nil
         target.priority = priority
         target.iconName = iconName
+        target.customIconText = iconName == "sparkles" ? customIconText.trimmingCharacters(in: .whitespacesAndNewlines) : nil
         target.colorHex = colorHex
         target.repeatRule = repeatRule == "none" ? nil : repeatRule
         target.repeatWeekdays = requiresRepeatDetails ? repeatWeekdays.sorted() : []

@@ -12,6 +12,7 @@ final class TaskCard {
     var endTime: Date?
     var priority: String = "normal"
     var iconName: String = "rectangle.stack"
+    var customIconText: String?
     var colorHex: String = "#10B981"
     var sortOrder: Int = 0
     var isCompleted: Bool = false
@@ -41,6 +42,7 @@ final class TaskCard {
         endTime: Date? = nil,
         priority: String = "normal",
         iconName: String = "rectangle.stack",
+        customIconText: String? = nil,
         colorHex: String = "#10B981",
         sortOrder: Int = 0,
         isCompleted: Bool = false,
@@ -62,6 +64,7 @@ final class TaskCard {
         self.endTime = endTime
         self.priority = priority
         self.iconName = iconName
+        self.customIconText = customIconText
         self.colorHex = colorHex
         self.sortOrder = sortOrder
         self.isCompleted = isCompleted

@@ -89,6 +89,14 @@ struct TaskCardRowView: View {
             if let achievement {
                 AchievementStampView(achievement: achievement, compact: true)
                     .frame(width: compact ? 36 : 40, height: compact ? 36 : 40)
+            } else if card.iconName == "sparkles",
+                      let customText = card.customIconText?.trimmingCharacters(in: .whitespacesAndNewlines),
+                      !customText.isEmpty {
+                Text(String(customText.prefix(2)))
+                    .font(.system(size: compact ? 17 : 19, weight: .bold, design: .rounded))
+                    .foregroundStyle(cardColor)
+                    .frame(width: compact ? 38 : 42, height: compact ? 38 : 42)
+                    .background(cardColor.opacity(0.18), in: RoundedRectangle(cornerRadius: 14))
             } else {
                 Image(systemName: card.iconName)
                     .font(compact ? .title3 : .title2)

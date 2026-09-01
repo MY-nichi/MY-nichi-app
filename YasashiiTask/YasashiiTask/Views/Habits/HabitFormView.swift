@@ -7,11 +7,11 @@ struct HabitFormView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var settings: [AppSettings]
     @State private var viewModel: HabitFormViewModel
-    @State private var isCustomIconInputVisible = false
     @State private var isDeletionConfirmationPresented = false
+    @State private var isCustomIconInputVisible = false
     @FocusState private var isCustomIconFieldFocused: Bool
 
-    private let icons = ["checkmark.circle", "leaf", "figure.walk", "book", "pencil", "music.note", "heart", "cup.and.saucer", "sparkles"]
+    private let icons = ["checkmark.circle", "leaf", "figure.walk", "book", "pencil", "music.note", "paintpalette", "heart", "cup.and.saucer", "sparkles"]
     private let colors = ["#10B981", "#60A5FA", "#06B6D4", "#84CC16", "#FBBF24", "#F97316", "#EF4444", "#F472B6", "#A78BFA", "#64748B"]
     private let weekdays = [(1, "日"), (2, "月"), (3, "火"), (4, "水"), (5, "木"), (6, "金"), (7, "土")]
 
@@ -56,18 +56,15 @@ struct HabitFormView: View {
 
                         if viewModel.iconName == "sparkles", isCustomIconInputVisible {
                             Divider()
-                            HStack {
-                                Text("表示文字")
-                                TextField("文字・絵文字", text: $viewModel.customIconText)
-                                    .multilineTextAlignment(.trailing)
-                                    .focused($isCustomIconFieldFocused)
-                                    .submitLabel(.done)
-                                    .onSubmit {
-                                        isCustomIconFieldFocused = false
-                                        isCustomIconInputVisible = false
-                                    }
-                            }
-                            .frame(minHeight: 44)
+                            TextField("", text: $viewModel.customIconText)
+                                .multilineTextAlignment(.trailing)
+                                .focused($isCustomIconFieldFocused)
+                                .submitLabel(.done)
+                                .onSubmit {
+                                    isCustomIconFieldFocused = false
+                                    isCustomIconInputVisible = false
+                                }
+                                .frame(minHeight: 44)
                         }
 
                         Divider()
@@ -224,7 +221,7 @@ struct HabitFormView: View {
     }
 
     private func iconDisplayName(_ icon: String) -> String {
-        ["checkmark.circle": "チェック", "leaf": "葉", "figure.walk": "運動", "book": "読書", "pencil": "学習", "music.note": "音楽", "heart": "健康", "cup.and.saucer": "休憩", "sparkles": "その他"][icon] ?? "アイコン"
+        ["checkmark.circle": "チェック", "leaf": "葉", "figure.walk": "運動", "book": "読書", "pencil": "学習", "music.note": "音楽", "paintpalette": "趣味", "heart": "健康", "cup.and.saucer": "休憩", "sparkles": "その他"][icon] ?? "アイコン"
     }
 
     private var hapticsEnabled: Bool {

@@ -157,7 +157,15 @@ private struct SettingsForm: View {
 private extension View {
     func settingsCardRows() -> some View {
         self
-            .listRowBackground(AppTheme.cardBackground)
+            .listRowBackground(
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(AppTheme.cardBackground)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 18)
+                            .stroke(AppTheme.cardStroke.opacity(0.82), lineWidth: 1.15)
+                    }
+                    .padding(.vertical, 2)
+            )
             .listRowSeparatorTint(AppTheme.cardStroke.opacity(0.65))
     }
 }
