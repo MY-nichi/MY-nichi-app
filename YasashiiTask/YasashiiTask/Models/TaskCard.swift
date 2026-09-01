@@ -3,32 +3,32 @@ import SwiftData
 
 @Model
 final class TaskCard {
-    var id: UUID
-    var title: String
-    var detail: String
-    var memo: String
+    var id: UUID = UUID()
+    var title: String = ""
+    var detail: String = ""
+    var memo: String = ""
     var dueDate: Date?
     var startTime: Date?
     var endTime: Date?
-    var priority: String
-    var iconName: String
-    var colorHex: String
-    var sortOrder: Int
-    var isCompleted: Bool
+    var priority: String = "normal"
+    var iconName: String = "rectangle.stack"
+    var colorHex: String = "#10B981"
+    var sortOrder: Int = 0
+    var isCompleted: Bool = false
     var completedAt: Date?
     var repeatRule: String?
     var repeatWeekdays: [Int] = []
     var reminderTime: Date?
-    var tags: [String]
-    var createdAt: Date
-    var updatedAt: Date
+    var tags: [String] = []
+    var createdAt: Date = Date()
+    var updatedAt: Date = Date()
     var habit: Habit?
 
     @Relationship(deleteRule: .cascade, inverse: \ChecklistItem.taskCard)
-    var checklistItems: [ChecklistItem]
+    var checklistItems: [ChecklistItem]? = []
 
     @Relationship(deleteRule: .cascade, inverse: \CompletionRecord.taskCard)
-    var completionRecords: [CompletionRecord]
+    var completionRecords: [CompletionRecord]? = []
 
     init(
         id: UUID = UUID(),
@@ -49,8 +49,8 @@ final class TaskCard {
         repeatWeekdays: [Int] = [],
         reminderTime: Date? = nil,
         tags: [String] = [],
-        createdAt: Date = .now,
-        updatedAt: Date = .now
+        createdAt: Date = Date(),
+        updatedAt: Date = Date()
     ) {
         self.id = id
         self.habit = habit

@@ -3,13 +3,13 @@ import SwiftData
 
 @Model
 final class AppSettings {
-    var id: UUID
-    var theme: String
-    var notificationsEnabled: Bool
-    var hapticsEnabled: Bool
-    var backupReminderEnabled: Bool
+    var id: UUID = UUID()
+    var theme: String = "system"
+    var notificationsEnabled: Bool = false
+    var hapticsEnabled: Bool = true
+    var backupReminderEnabled: Bool = false
     var lastBackupDate: Date?
-    var hasCompletedOnboarding: Bool
+    var hasCompletedOnboarding: Bool = false
     var displayName: String?
 
     init(

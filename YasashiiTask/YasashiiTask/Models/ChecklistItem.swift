@@ -3,10 +3,10 @@ import SwiftData
 
 @Model
 final class ChecklistItem {
-    var id: UUID
-    var title: String
-    var isCompleted: Bool
-    var sortOrder: Int
+    var id: UUID = UUID()
+    var title: String = ""
+    var isCompleted: Bool = false
+    var sortOrder: Int = 0
     var taskCard: TaskCard?
 
     init(

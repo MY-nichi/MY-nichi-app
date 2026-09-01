@@ -131,7 +131,7 @@ final class TaskCardFormViewModel {
     }
 
     private func updateChecklist(for target: TaskCard) {
-        target.checklistItems.removeAll()
+        target.checklistItems?.removeAll()
         let titles = checklistDrafts
             .map { $0.title.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }

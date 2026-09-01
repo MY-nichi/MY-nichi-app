@@ -9,7 +9,7 @@ struct TaskCardListView: View {
     @State private var isCreatingCard = false
 
     private var cards: [TaskCard] {
-        viewModel.sortedCards(from: habit.taskCards)
+        viewModel.sortedCards(from: habit.taskCards ?? [])
     }
 
     var body: some View {
@@ -35,7 +35,7 @@ struct TaskCardListView: View {
             TaskCardFormView(
                 habit: habit,
                 card: nil,
-                nextSortOrder: viewModel.nextSortOrder(from: habit.taskCards)
+                nextSortOrder: viewModel.nextSortOrder(from: habit.taskCards ?? [])
             )
         }
         .sheet(item: $cardBeingEdited) { card in

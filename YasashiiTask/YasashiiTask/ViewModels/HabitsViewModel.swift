@@ -82,7 +82,7 @@ final class HabitsViewModel {
     }
 
     private func achievement(for habit: Habit, on date: Date, calendar: Calendar) -> TaskAchievement? {
-        habit.completionRecords.first {
+        (habit.completionRecords ?? []).first {
             $0.taskCard == nil && calendar.isDate($0.targetDate, inSameDayAs: date)
         }?.achievement
     }

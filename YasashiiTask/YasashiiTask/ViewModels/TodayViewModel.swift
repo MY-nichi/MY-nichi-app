@@ -77,7 +77,7 @@ final class TodayViewModel {
 
     func cardsForToday(from habits: [Habit], date: Date = .now, calendar: Calendar = .current) -> [TaskCard] {
         let todayHabits = habitsForToday(from: habits, date: date, calendar: calendar)
-        return scheduledCardsForToday(from: todayHabits.flatMap(\.taskCards), date: date, calendar: calendar)
+        return scheduledCardsForToday(from: todayHabits.flatMap { $0.taskCards ?? [] }, date: date, calendar: calendar)
     }
 
     func independentCardsForToday(from cards: [TaskCard], date: Date = .now, calendar: Calendar = .current) -> [TaskCard] {
@@ -275,7 +275,7 @@ final class TodayViewModel {
         date: Date,
         calendar: Calendar
     ) -> CompletionRecord? {
-        card.completionRecords.first { calendar.isDate($0.targetDate, inSameDayAs: date) }
+        (card.completionRecords ?? []).first { calendar.isDate($0.targetDate, inSameDayAs: date) }
     }
 
     private func completionRecord(
@@ -283,7 +283,7 @@ final class TodayViewModel {
         date: Date,
         calendar: Calendar
     ) -> CompletionRecord? {
-        habit.completionRecords.first {
+        (habit.completionRecords ?? []).first {
             $0.taskCard == nil && calendar.isDate($0.targetDate, inSameDayAs: date)
         }
     }

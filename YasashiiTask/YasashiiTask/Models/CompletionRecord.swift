@@ -3,11 +3,11 @@ import SwiftData
 
 @Model
 final class CompletionRecord {
-    var id: UUID
-    var targetDate: Date
+    var id: UUID = UUID()
+    var targetDate: Date = Date()
     var completedAt: Date?
-    var status: String
-    var memo: String
+    var status: String = "pending"
+    var memo: String = ""
     var habit: Habit?
     var taskCard: TaskCard?
 

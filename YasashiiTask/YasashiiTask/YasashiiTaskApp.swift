@@ -14,7 +14,9 @@ struct YasashiiTaskApp: App {
     private let dataStore = AppDataStore.make()
 
     init() {
-        MobileAds.shared.start()
+        DispatchQueue.main.async {
+            MobileAds.shared.start()
+        }
     }
 
     var body: some Scene {
@@ -30,6 +32,8 @@ private struct AppDataStore {
     let warning: String?
 
     static func make() -> AppDataStore {
+        Self.ensureApplicationSupportDirectory()
+
         let schema = Schema([
             Habit.self,
             TaskCard.self,
@@ -46,6 +50,7 @@ private struct AppDataStore {
                 warning: nil
             )
         } catch {
+            print("SwiftData local container failed: \(error)")
             let temporaryConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
             do {
                 return AppDataStore(
@@ -53,7 +58,7 @@ private struct AppDataStore {
                     warning: "端末内のデータを読み込めないため、一時保存モードで起動しています。アプリを終了すると今回の変更は消えます。"
                 )
             } catch {
-                fatalError("一時保存モードも開始できませんでした。")
+                fatalError("一時保存モードも開始できませんでした: \(error)")
             }
         }
 #else
@@ -87,5 +92,13 @@ private struct AppDataStore {
             }
         }
 #endif
+    }
+
+    private static func ensureApplicationSupportDirectory() {
+        guard let applicationSupportURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            return
+        }
+
+        try? FileManager.default.createDirectory(at: applicationSupportURL, withIntermediateDirectories: true)
     }
 }

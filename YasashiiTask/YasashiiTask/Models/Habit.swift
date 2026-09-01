@@ -3,33 +3,33 @@ import SwiftData
 
 @Model
 final class Habit {
-    var id: UUID
-    var title: String
-    var detail: String
-    var category: String
-    var iconName: String
+    var id: UUID = UUID()
+    var title: String = ""
+    var detail: String = ""
+    var category: String = ""
+    var iconName: String = "checkmark.circle"
     var customIconText: String?
-    var colorHex: String
-    var startDate: Date
+    var colorHex: String = "#10B981"
+    var startDate: Date = Date()
     var endDate: Date?
-    var activeDays: [Int]
+    var activeDays: [Int] = []
     var reminderTime: Date?
-    var targetCount: Int
+    var targetCount: Int = 1
     var dailyStartTime: Date?
     var dailyEndTime: Date?
     var targetMinutes: Int?
     var targetDays: Int?
-    var sortOrder: Int
-    var isActive: Bool
-    var isArchived: Bool
-    var createdAt: Date
-    var updatedAt: Date
+    var sortOrder: Int = 0
+    var isActive: Bool = true
+    var isArchived: Bool = false
+    var createdAt: Date = Date()
+    var updatedAt: Date = Date()
 
     @Relationship(deleteRule: .cascade, inverse: \TaskCard.habit)
-    var taskCards: [TaskCard]
+    var taskCards: [TaskCard]? = []
 
     @Relationship(deleteRule: .cascade, inverse: \CompletionRecord.habit)
-    var completionRecords: [CompletionRecord]
+    var completionRecords: [CompletionRecord]? = []
 
     init(
         id: UUID = UUID(),
@@ -39,7 +39,7 @@ final class Habit {
         iconName: String = "checkmark.circle",
         customIconText: String? = nil,
         colorHex: String = "#10B981",
-        startDate: Date = .now,
+        startDate: Date = Date(),
         endDate: Date? = nil,
         activeDays: [Int] = [],
         reminderTime: Date? = nil,
@@ -51,8 +51,8 @@ final class Habit {
         sortOrder: Int = 0,
         isActive: Bool = true,
         isArchived: Bool = false,
-        createdAt: Date = .now,
-        updatedAt: Date = .now
+        createdAt: Date = Date(),
+        updatedAt: Date = Date()
     ) {
         self.id = id
         self.title = title
