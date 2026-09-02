@@ -86,11 +86,11 @@ private struct YasashiiTaskWidgetView: View {
     }
 
     private var itemLimit: Int {
-        family == .systemSmall ? 2 : 4
+        family == .systemSmall ? 1 : 3
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: family == .systemSmall ? 6 : 9) {
+        VStack(alignment: .leading, spacing: family == .systemSmall ? 5 : 7) {
             header
 
             if hasItems {
@@ -101,64 +101,67 @@ private struct YasashiiTaskWidgetView: View {
 
             Spacer(minLength: 0)
         }
-        .padding(family == .systemSmall ? 11 : 14)
+        .padding(EdgeInsets(
+            top: family == .systemSmall ? 16 : 18,
+            leading: family == .systemSmall ? 4 : 7,
+            bottom: family == .systemSmall ? 7 : 9,
+            trailing: family == .systemSmall ? 4 : 7
+        ))
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .containerBackground(widgetBackground, for: .widget)
         .widgetURL(WidgetConstants.appURL)
     }
 
     private var header: some View {
         HStack {
-            AppMark(size: family == .systemSmall ? 32 : 36)
+            AppMark(size: family == .systemSmall ? 34 : 38)
             Spacer(minLength: 0)
         }
-        .frame(height: family == .systemSmall ? 32 : 36)
+        .frame(height: family == .systemSmall ? 34 : 38)
     }
 
     private var content: some View {
-        VStack(alignment: .leading, spacing: family == .systemSmall ? 6 : 8) {
+        VStack(alignment: .leading, spacing: family == .systemSmall ? 5 : 7) {
             widgetSection("習慣", icon: "leaf.fill", items: entry.snapshot.habitItems)
             widgetSection("タスク", icon: "checkmark.square.fill", items: entry.snapshot.taskItems)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var emptyState: some View {
-        VStack(alignment: .leading, spacing: 5) {
+        VStack(alignment: .leading, spacing: 6) {
             Text("今日はゆっくり")
-                .font(.system(size: 14, weight: .bold, design: .rounded))
-                .foregroundStyle(.primary)
+                .font(.system(size: family == .systemSmall ? 17 : 19, weight: .black, design: .rounded))
+                .foregroundStyle(.white)
                 .lineLimit(1)
-            Text("習慣とタスクを追加すると表示されます")
-                .font(itemFont)
-                .foregroundStyle(.secondary)
-                .lineLimit(2)
-                .minimumScaleFactor(0.82)
+            Text("予定はありません")
+                .font(.system(size: family == .systemSmall ? 13 : 15, weight: .bold, design: .rounded))
+                .foregroundStyle(.white.opacity(0.82))
+                .lineLimit(1)
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 9)
+        .padding(.horizontal, 13)
+        .padding(.vertical, 11)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.white.opacity(0.95), in: RoundedRectangle(cornerRadius: 14))
-        .overlay {
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(Color(red: 0.42, green: 0.82, blue: 0.70).opacity(0.75), lineWidth: 1)
-        }
+        .background(sectionBackground, in: RoundedRectangle(cornerRadius: 18))
+        .shadow(color: Color(red: 0.03, green: 0.34, blue: 0.25).opacity(0.12), radius: 6, x: 0, y: 3)
     }
 
     private func widgetSection(_ title: String, icon: String, items: [TodayWidgetItem]) -> some View {
-        VStack(alignment: .leading, spacing: family == .systemSmall ? 3 : 5) {
+        VStack(alignment: .leading, spacing: family == .systemSmall ? 4 : 6) {
             HStack(spacing: 5) {
                 Image(systemName: icon)
-                    .font(.system(size: family == .systemSmall ? 9 : 10, weight: .bold))
+                    .font(.system(size: family == .systemSmall ? 10 : 11, weight: .black))
                 Text(title)
                     .font(.system(size: family == .systemSmall ? 10 : 11, weight: .black, design: .rounded))
                     .lineLimit(1)
                 Spacer(minLength: 0)
             }
-            .foregroundStyle(Color(red: 0.00, green: 0.55, blue: 0.40))
+            .foregroundStyle(.white.opacity(0.82))
 
             if items.isEmpty {
                 Text("なし")
                     .font(itemFont)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.white.opacity(0.80))
                     .lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else {
@@ -169,53 +172,57 @@ private struct YasashiiTaskWidgetView: View {
                 }
             }
         }
-        .padding(.horizontal, family == .systemSmall ? 9 : 11)
-        .padding(.vertical, family == .systemSmall ? 6 : 8)
-        .frame(maxWidth: .infinity, alignment: .topLeading)
-        .background(.white.opacity(0.96), in: RoundedRectangle(cornerRadius: 14))
-        .overlay {
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(Color(red: 0.42, green: 0.82, blue: 0.70).opacity(0.72), lineWidth: 1)
-        }
-        .shadow(color: Color(red: 0.03, green: 0.34, blue: 0.25).opacity(0.09), radius: 6, x: 0, y: 3)
+        .padding(.horizontal, family == .systemSmall ? 12 : 14)
+        .padding(.vertical, family == .systemSmall ? 5 : 7)
+        .frame(maxWidth: .infinity, minHeight: family == .systemSmall ? 48 : 56, alignment: .topLeading)
+        .background(sectionBackground, in: RoundedRectangle(cornerRadius: 14))
+        .shadow(color: Color(red: 0.03, green: 0.34, blue: 0.25).opacity(0.12), radius: 6, x: 0, y: 3)
     }
 
     private func itemRow(_ item: TodayWidgetItem) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 5) {
-            Circle()
-                .fill(Color(red: 0.00, green: 0.55, blue: 0.40))
-                .frame(width: 4, height: 4)
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
             Text(item.title)
                 .font(itemFont)
-                .foregroundStyle(.primary)
+                .foregroundStyle(.white)
                 .lineLimit(1)
-                .minimumScaleFactor(0.78)
+                .minimumScaleFactor(0.70)
                 .allowsTightening(true)
-            Spacer(minLength: 4)
+            Spacer(minLength: 5)
             if let reminderTimeLabel = item.reminderTimeLabel, !reminderTimeLabel.isEmpty {
                 Text(reminderTimeLabel)
                     .font(timeFont)
-                    .foregroundStyle(Color(red: 0.00, green: 0.47, blue: 0.35))
+                    .foregroundStyle(.white.opacity(0.88))
                     .lineLimit(1)
-                    .minimumScaleFactor(0.8)
+                    .minimumScaleFactor(0.78)
             }
         }
     }
 
     private var itemFont: Font {
-        .system(size: family == .systemSmall ? 13 : 15, weight: .bold, design: .rounded)
+        .system(size: family == .systemSmall ? 18 : 20, weight: .black, design: .rounded)
     }
 
     private var timeFont: Font {
-        .system(size: family == .systemSmall ? 10 : 11, weight: .bold, design: .rounded).monospacedDigit()
+        .system(size: family == .systemSmall ? 12 : 13, weight: .black, design: .rounded).monospacedDigit()
+    }
+
+    private var sectionBackground: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color(red: 0.00, green: 0.52, blue: 0.39).opacity(0.88),
+                Color(red: 0.00, green: 0.42, blue: 0.33).opacity(0.82)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
     }
 
     private var widgetBackground: LinearGradient {
         LinearGradient(
             colors: [
-                Color(red: 0.77, green: 0.98, blue: 0.89),
-                Color(red: 0.89, green: 1.00, blue: 0.95),
-                Color(red: 0.96, green: 1.00, blue: 0.92)
+                Color(red: 0.70, green: 0.97, blue: 0.86),
+                Color(red: 0.84, green: 1.00, blue: 0.93),
+                Color(red: 0.92, green: 1.00, blue: 0.87)
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -232,11 +239,7 @@ private struct AppMark: View {
             .scaledToFit()
             .frame(width: size, height: size)
             .clipShape(RoundedRectangle(cornerRadius: size * 0.24))
-            .overlay {
-                RoundedRectangle(cornerRadius: size * 0.24)
-                    .stroke(.white.opacity(0.7), lineWidth: 1)
-            }
-            .shadow(color: Color(red: 0.03, green: 0.34, blue: 0.25).opacity(0.16), radius: 5, x: 0, y: 3)
+            .shadow(color: Color(red: 0.03, green: 0.34, blue: 0.25).opacity(0.18), radius: 6, x: 0, y: 3)
     }
 }
 
@@ -250,6 +253,7 @@ struct YasashiiTaskWidget: Widget {
         .configurationDisplayName("MY-nichi")
         .description("今日の習慣とタスクを確認します。")
         .supportedFamilies([.systemSmall, .systemMedium])
+        .contentMarginsDisabled()
     }
 }
 
